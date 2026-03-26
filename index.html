@@ -175,7 +175,7 @@ html,body{height:100%;background:var(--bg);font-family:"Source Sans 3",sans-seri
         </div>
       </div>
       <div class="quicklinks">
-        <button class="ql" onclick="goPage('mel')">
+        <button class="ql" onclick="openMel()">
           <div class="ql-ico" style="background:#e8f4e8">🤖</div>
           <div class="ql-label">MEL</div>
           <div class="ql-sub">Assistante virtuelle</div>
@@ -209,6 +209,22 @@ html,body{height:100%;background:var(--bg);font-family:"Source Sans 3",sans-seri
     </div>
 
     <!-- MEL -->
+    <div id="page-mel" style="display:none">
+
+  <h2 style="padding:16px">👩‍💼 Assistante MEL</h2>
+
+  <div id="chat-msgs" style="height:300px;overflow:auto;padding:10px;"></div>
+
+  <input id="chat-input" 
+         placeholder="Posez votre question…" 
+         style="width:100%;padding:14px;font-size:16px;"
+         onkeydown="if(event.key==='Enter')sendChat()">
+
+  <button onclick="goHome()" style="margin:10px">
+    ⬅ Retour
+  </button>
+
+</div>
     <div class="page-flex" id="p-mel">
       <div class="chat-header">
         <div class="mel-av">🌿</div>
@@ -335,7 +351,7 @@ html,body{height:100%;background:var(--bg);font-family:"Source Sans 3",sans-seri
 
 <script>
 // ── Config ────────────────────────────────────────────────────────────────────
-const MEL_PROXY = "https://chatbot-mairie-mezieres.onrender.com/mel";
+const MEL_PROXY = 'https://chatbot-mairie-mezieres.onrender.com/mel';
 const ICAL_URL  = 'https://calendar.google.com/calendar/ical/1d48f14b59e12907917ff669d0437e29a06a7578a68d14d761e669750e7776b4%40group.calendar.google.com/private-ee29dc4f9f6a7c36809edf58f64a6469/basic.ics';
 
 // ── Données circuits ──────────────────────────────────────────────────────────
@@ -456,7 +472,14 @@ function goPage(name){
 // ── MEL ───────────────────────────────────────────────────────────────────────
 let melBusy=false;
 const melHist=[];
-
+function openMel(){
+  document.getElementById("page-home").style.display = "none";
+  document.getElementById("page-mel").style.display = "block";
+}
+function goHome(){
+  document.getElementById("page-mel").style.display = "none";
+  document.getElementById("page-home").style.display = "block";
+}
 function initMel(){
   addMsg('bot','🌲 Bonjour ! Je suis MEL, l'assistante virtuelle de la mairie de Mézières-lez-Cléry.
 
