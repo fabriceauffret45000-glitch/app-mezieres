@@ -3,114 +3,416 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#1e3a1e">
+<meta name="theme-color" content="#1a3d2b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Mézières">
 <title>Mézières-lez-Cléry</title>
-<!-- VERSION 2.0 -->
+<!-- VERSION 2.1 -->
 <link rel="manifest" href="manifest.webmanifest">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300&display=swap" rel="stylesheet">
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --forest:#1e3a1e;--moss:#3d6b3d;--gold:#c9a84c;
-  --cream:#f5f0e8;--bg:#f0ede8;--card:#ffffff;
-  --text:#1a1a1a;--muted:#555;
+/* ═══════════════════════════════════════════
+   MÉZIÈRES-LEZ-CLÉRY — PWA v2.1
+   Charte : Nature & Modernité — Vert forêt,
+   crème chaud, or solognot, touches de ciel.
+═══════════════════════════════════════════ */
+:root {
+  --forest:  #1a3d2b;
+  --leaf:    #2d6a4f;
+  --sage:    #52b788;
+  --mist:    #d8f3dc;
+  --sky:     #e8f4f8;
+  --gold:    #d4a843;
+  --amber:   #f4a261;
+  --cream:   #faf7f2;
+  --warm:    #f0ebe3;
+  --card:    #ffffff;
+  --text:    #1c2b1f;
+  --muted:   #5a7065;
+  --border:  rgba(0,0,0,0.07);
+  --shadow:  0 2px 16px rgba(26,61,43,0.10);
+  --shadow-lg: 0 8px 32px rgba(26,61,43,0.16);
+  --r:       20px;
 }
-html,body{
-  min-height:100%;background:var(--bg);
-  font-family:Georgia,"Times New Roman",serif;
-  font-size:19px;line-height:1.6;color:var(--text);
-  -webkit-text-size-adjust:100%;
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  min-height: 100%;
+  background: var(--warm);
+  font-family: 'Nunito', 'Segoe UI', sans-serif;
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--text);
+  -webkit-text-size-adjust: 100%;
 }
-.header{
-  background:var(--forest);
-  padding:20px 18px 16px;
-  padding-top:calc(20px + env(safe-area-inset-top,0px));
-  text-align:center;
-}
-.header-commune{font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;color:#a8c89a;margin-bottom:4px;}
-.header-title{font-size:1.5rem;color:#f5f0e8;font-weight:normal;}
-.header-version{font-size:0.58rem;color:rgba(255,255,255,0.2);margin-top:4px;font-family:monospace;}
-.content{padding:14px 14px;max-width:520px;margin:0 auto;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px));}
-.sec{font-size:0.68rem;text-transform:uppercase;letter-spacing:0.1em;color:#999;font-family:Arial,sans-serif;padding:10px 4px 6px;font-weight:bold;}
-.card{
-  display:flex;align-items:center;gap:16px;
-  background:var(--card);border-radius:16px;
-  padding:18px 20px;margin-bottom:11px;
-  text-decoration:none;color:var(--text);
-  font-size:1.1rem;font-weight:bold;
-  box-shadow:0 2px 8px rgba(0,0,0,0.09);
-  border:none;width:100%;text-align:left;
-  cursor:pointer;font-family:inherit;
-  -webkit-tap-highlight-color:transparent;
-  transition:transform 0.1s;
-}
-.card:active{transform:scale(0.98);}
-.ico{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;}
-.ico-mel{background:#e8f4e8;} .ico-site{background:#e8f0f8;}
-.ico-radio{background:#e8eef8;} .ico-hab{background:#eee8f8;}
-.ico-cal{background:#fff4e0;} .ico-rando{background:#e8f4ec;}
-.ico-pocket{background:#fff0e8;} .ico-install{background:#f0f8e8;}
-.ct{flex:1;}
-.ct-label{font-size:1.1rem;font-weight:bold;color:var(--text);line-height:1.3;}
-.ct-sub{font-size:0.76rem;color:var(--muted);font-weight:normal;margin-top:2px;font-family:Arial,sans-serif;}
-.arr{color:#ccc;font-size:1.2rem;flex-shrink:0;}
-.footer{text-align:center;padding:4px 14px 20px;font-size:0.62rem;color:#aaa;font-family:Arial,sans-serif;}
 
-/* MEL overlay */
-.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:100;align-items:flex-end;}
-.ov.open{display:flex;}
-.panel{background:var(--bg);width:100%;max-width:520px;margin:0 auto;border-radius:20px 20px 0 0;height:88vh;display:flex;flex-direction:column;overflow:hidden;}
-.mhd{background:var(--forest);padding:13px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0;}
-.mav{width:44px;height:44px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
-.mname{font-size:1rem;color:#f5f0e8;font-weight:bold;font-family:Georgia,serif;}
-.mstat{font-size:0.7rem;color:#a8c89a;font-family:Arial,sans-serif;}
-.mcls{margin-left:auto;background:rgba(255,255,255,0.12);border:none;border-radius:50%;width:34px;height:34px;color:white;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px;-webkit-overflow-scrolling:touch;}
-.msg{display:flex;gap:8px;}
-.msg.user{flex-direction:row-reverse;}
-.mav2{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;margin-top:2px;}
-.msg.bot .mav2{background:var(--forest);color:var(--gold);}
-.msg.user .mav2{background:#5c4033;color:#fff;}
-.bub{max-width:82%;padding:11px 14px;border-radius:16px;font-size:1rem;line-height:1.55;font-family:Arial,sans-serif;}
-.msg.bot .bub{background:white;border:1px solid rgba(0,0,0,0.08);border-bottom-left-radius:3px;}
-.msg.user .bub{background:var(--forest);color:white;border-bottom-right-radius:3px;}
-.typ{display:flex;gap:4px;align-items:center;padding:11px 14px;}
-.typ span{width:7px;height:7px;background:#a8c89a;border-radius:50%;animation:bo 1.2s infinite;}
-.typ span:nth-child(2){animation-delay:0.2s;} .typ span:nth-child(3){animation-delay:0.4s;}
+/* ── Bannière d'installation (en haut, disparaît après install) ── */
+#install-banner {
+  background: linear-gradient(135deg, var(--gold) 0%, var(--amber) 100%);
+  padding: 14px 18px;
+  padding-top: calc(14px + env(safe-area-inset-top,0px));
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  animation: pulse-banner 3s ease-in-out infinite;
+}
+@keyframes pulse-banner {
+  0%,100% { box-shadow: 0 0 0 0 rgba(212,168,67,0); }
+  50% { box-shadow: 0 0 0 6px rgba(212,168,67,0.2); }
+}
+#install-banner.hidden { display: none; }
+.ib-ico {
+  width: 46px; height: 46px;
+  background: rgba(255,255,255,0.3);
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0;
+}
+.ib-text { flex: 1; }
+.ib-title { font-size: 0.92rem; font-weight: 800; color: #3d2000; line-height: 1.2; }
+.ib-sub { font-size: 0.72rem; color: rgba(61,32,0,0.7); margin-top: 1px; }
+.ib-btn {
+  background: rgba(255,255,255,0.9);
+  color: #3d2000;
+  border: none;
+  border-radius: 12px;
+  padding: 8px 14px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 800;
+  cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.ib-close {
+  background: none; border: none;
+  color: rgba(61,32,0,0.5);
+  font-size: 1.1rem; cursor: pointer;
+  padding: 4px; flex-shrink: 0;
+}
+
+/* ── En-tête ── */
+.header {
+  background: linear-gradient(160deg, var(--forest) 0%, var(--leaf) 100%);
+  padding: 22px 20px 20px;
+  position: relative;
+  overflow: hidden;
+}
+.header::before {
+  content: '';
+  position: absolute; right: -40px; top: -40px;
+  width: 200px; height: 200px;
+  background: radial-gradient(circle, rgba(82,183,136,0.15) 0%, transparent 70%);
+  border-radius: 50%;
+}
+.header::after {
+  content: '🌲';
+  position: absolute; right: 10px; bottom: -10px;
+  font-size: 80px; opacity: 0.06; line-height: 1;
+  pointer-events: none;
+}
+.header-top {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 10px;
+}
+.header-badge {
+  font-size: 0.6rem; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--sage);
+  font-weight: 700; margin-bottom: 5px;
+}
+.header-title {
+  font-family: 'Fraunces', serif;
+  font-size: 1.65rem; font-weight: 600;
+  color: var(--cream); letter-spacing: -0.01em;
+  line-height: 1.15;
+}
+.header-sub {
+  font-size: 0.75rem; color: rgba(216,243,220,0.7);
+  font-style: italic; margin-top: 4px;
+  font-family: 'Fraunces', serif;
+}
+.header-version-pill {
+  background: rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.4);
+  font-size: 0.55rem; font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 3px 8px; border-radius: 20px;
+  font-family: monospace; flex-shrink: 0;
+}
+
+/* ── Météo / tags ── */
+.header-tags {
+  display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px;
+}
+.htag {
+  background: rgba(255,255,255,0.12);
+  color: var(--mist);
+  font-size: 0.68rem; font-weight: 600;
+  padding: 4px 11px; border-radius: 20px;
+}
+
+/* ── Contenu ── */
+.content {
+  padding: 16px 14px;
+  max-width: 520px;
+  margin: 0 auto;
+  padding-bottom: calc(28px + env(safe-area-inset-bottom,0px));
+}
+
+/* ── Label de section ── */
+.sec {
+  font-size: 0.65rem; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--muted); padding: 14px 2px 8px;
+}
+.sec:first-child { padding-top: 4px; }
+
+/* ── Cartes ── */
+.card {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--card);
+  border-radius: var(--r);
+  padding: 16px 18px;
+  margin-bottom: 10px;
+  text-decoration: none;
+  color: var(--text);
+  border: none; width: 100%; text-align: left;
+  cursor: pointer; font-family: 'Nunito', sans-serif;
+  box-shadow: var(--shadow);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+  overflow: hidden;
+}
+.card::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: transparent;
+  border-radius: 3px 0 0 3px;
+  transition: background 0.2s;
+}
+.card:active { transform: scale(0.97); box-shadow: 0 1px 6px rgba(26,61,43,0.08); }
+.card:hover::before { background: var(--sage); }
+
+/* Icônes */
+.ico {
+  width: 50px; height: 50px;
+  border-radius: 15px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; flex-shrink: 0;
+  transition: transform 0.2s;
+}
+.card:active .ico { transform: scale(0.92); }
+.ico-mel    { background: linear-gradient(135deg, #e8f8f0, #d0f0e0); }
+.ico-site   { background: linear-gradient(135deg, #e8f0fc, #d0e4f8); }
+.ico-radio  { background: linear-gradient(135deg, #fde8f0, #f8d0e4); }
+.ico-hab    { background: linear-gradient(135deg, #ede8f8, #ddd0f0); }
+.ico-cal    { background: linear-gradient(135deg, #fef3e0, #fce8c0); }
+.ico-rando  { background: linear-gradient(135deg, #eaf8e8, #d4f0d4); }
+.ico-pocket { background: linear-gradient(135deg, #fff0e8, #ffe0d0); }
+
+/* Texte des cartes */
+.ct { flex: 1; min-width: 0; }
+.ct-label {
+  font-size: 1.0rem; font-weight: 700;
+  color: var(--text); line-height: 1.25;
+}
+.ct-sub {
+  font-size: 0.72rem; color: var(--muted);
+  font-weight: 400; margin-top: 2px;
+}
+.arr { color: #c5d5ca; font-size: 1.1rem; flex-shrink: 0; margin-left: 4px; }
+
+/* ── Footer ── */
+.footer {
+  text-align: center;
+  padding: 4px 14px 16px;
+  font-size: 0.6rem; color: #a0b0aa;
+  letter-spacing: 0.05em;
+}
+
+/* ═══════════════════════════════════
+   OVERLAY MEL
+═══════════════════════════════════ */
+.ov {
+  display: none; position: fixed; inset: 0;
+  background: rgba(26,61,43,0.6);
+  backdrop-filter: blur(4px);
+  z-index: 200; align-items: flex-end;
+}
+.ov.open { display: flex; animation: fadeOv 0.2s ease; }
+@keyframes fadeOv { from{opacity:0} to{opacity:1} }
+.panel {
+  background: var(--warm);
+  width: 100%; max-width: 520px;
+  margin: 0 auto;
+  border-radius: 24px 24px 0 0;
+  height: 90vh;
+  display: flex; flex-direction: column; overflow: hidden;
+  box-shadow: 0 -8px 40px rgba(26,61,43,0.25);
+  animation: slideUp 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+@keyframes slideUp { from{transform:translateY(60px);opacity:0} to{transform:none;opacity:1} }
+
+.mhd {
+  background: linear-gradient(135deg, var(--forest), var(--leaf));
+  padding: 16px 18px;
+  display: flex; align-items: center; gap: 12px;
+  flex-shrink: 0;
+}
+.mav {
+  width: 46px; height: 46px;
+  background: linear-gradient(135deg, var(--gold), var(--amber));
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0;
+  box-shadow: 0 2px 10px rgba(212,168,67,0.4);
+}
+.mname { font-size: 1.0rem; color: var(--cream); font-weight: 700; font-family: 'Fraunces', serif; }
+.mstat { font-size: 0.67rem; color: var(--sage); margin-top: 1px; }
+.mcls {
+  margin-left: auto;
+  background: rgba(255,255,255,0.15);
+  border: none; border-radius: 50%;
+  width: 34px; height: 34px;
+  color: rgba(255,255,255,0.8); font-size: 1rem;
+  cursor: pointer; display: flex;
+  align-items: center; justify-content: center;
+  flex-shrink: 0; transition: background 0.2s;
+}
+.mcls:hover { background: rgba(255,255,255,0.25); }
+
+.msgs {
+  flex: 1; overflow-y: auto;
+  padding: 16px 14px;
+  display: flex; flex-direction: column; gap: 12px;
+  -webkit-overflow-scrolling: touch;
+}
+.msgs::-webkit-scrollbar { width: 3px; }
+.msgs::-webkit-scrollbar-thumb { background: var(--mist); border-radius: 2px; }
+
+.msg { display: flex; gap: 8px; animation: msgIn 0.2s ease; }
+@keyframes msgIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
+.msg.user { flex-direction: row-reverse; }
+.mav2 {
+  width: 30px; height: 30px; border-radius: 50%;
+  flex-shrink: 0; display: flex;
+  align-items: center; justify-content: center;
+  font-size: 13px; margin-top: 3px;
+}
+.msg.bot  .mav2 { background: var(--forest); color: var(--gold); }
+.msg.user .mav2 { background: #6b4c35; color: #fff; }
+.bub {
+  max-width: 82%; padding: 11px 15px;
+  border-radius: 18px; font-size: 0.96rem;
+  line-height: 1.55;
+}
+.msg.bot  .bub { background: white; border: 1px solid var(--border); border-bottom-left-radius: 5px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+.msg.user .bub { background: linear-gradient(135deg, var(--forest), var(--leaf)); color: white; border-bottom-right-radius: 5px; }
+.typ { display: flex; gap: 4px; align-items: center; padding: 11px 15px; }
+.typ span { width: 7px; height: 7px; background: var(--sage); border-radius: 50%; animation: bo 1.2s infinite; }
+.typ span:nth-child(2){animation-delay:0.2s} .typ span:nth-child(3){animation-delay:0.4s}
 @keyframes bo{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
-.sugs{padding:6px 14px 4px;display:flex;gap:8px;overflow-x:auto;flex-shrink:0;}
-.sugs::-webkit-scrollbar{display:none;}
-.sug{background:white;border:1.5px solid var(--gold);color:var(--forest);font-size:0.88rem;padding:7px 13px;border-radius:20px;white-space:nowrap;cursor:pointer;font-family:Arial,sans-serif;}
-.sug:active{background:var(--cream);}
-.mbar{padding:10px 14px;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));background:white;border-top:1px solid rgba(0,0,0,0.08);display:flex;gap:10px;flex-shrink:0;}
-.minp{flex:1;border:1.5px solid rgba(0,0,0,0.15);border-radius:24px;padding:10px 16px;font-size:1rem;font-family:Arial,sans-serif;outline:none;background:var(--bg);}
-.minp:focus{border-color:var(--moss);}
-.msnd{width:44px;height:44px;background:var(--forest);border:none;border-radius:50%;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
-.msnd:active{background:var(--moss);}
+
+.sugs {
+  padding: 8px 14px 4px;
+  display: flex; gap: 8px; overflow-x: auto; flex-shrink: 0;
+}
+.sugs::-webkit-scrollbar { display: none; }
+.sug {
+  background: white;
+  border: 1.5px solid var(--sage);
+  color: var(--leaf);
+  font-size: 0.84rem; font-weight: 600;
+  padding: 7px 14px; border-radius: 20px;
+  white-space: nowrap; cursor: pointer;
+  font-family: 'Nunito', sans-serif;
+  transition: background 0.15s;
+}
+.sug:active { background: var(--mist); }
+
+.mbar {
+  padding: 10px 14px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom,0px));
+  background: white; border-top: 1px solid var(--border);
+  display: flex; gap: 10px; flex-shrink: 0;
+}
+.minp {
+  flex: 1;
+  border: 1.5px solid rgba(0,0,0,0.12);
+  border-radius: 24px;
+  padding: 10px 16px;
+  font-size: 0.96rem;
+  font-family: 'Nunito', sans-serif;
+  outline: none; background: var(--warm);
+  color: var(--text);
+}
+.minp:focus { border-color: var(--sage); box-shadow: 0 0 0 3px rgba(82,183,136,0.15); }
+.msnd {
+  width: 44px; height: 44px;
+  background: linear-gradient(135deg, var(--forest), var(--leaf));
+  border: none; border-radius: 50%;
+  color: white; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(26,61,43,0.3);
+  transition: transform 0.15s;
+}
+.msnd:active { transform: scale(0.92); }
 </style>
 </head>
 <body>
 
+<!-- ── Bannière installation (disparaît après install) ── -->
+<div id="install-banner" onclick="installApp()">
+  <div class="ib-ico">📲</div>
+  <div class="ib-text">
+    <div class="ib-title">Installez l'application !</div>
+    <div class="ib-sub">Accès rapide depuis votre téléphone</div>
+  </div>
+  <button class="ib-btn" onclick="installApp();event.stopPropagation()">Installer</button>
+  <button class="ib-close" onclick="hideBanner(event)" title="Fermer">✕</button>
+</div>
+
+<!-- ── En-tête ── -->
+<div class="header">
+  <div class="header-top">
 <div class="header">
   <div class="header-commune">Commune de</div>
   <div class="header-title">Mézières-lez-Cléry</div>
-  <div class="header-version">v2.0</div>
+</div>
+    <div class="header-version-pill">v2.1</div>
+  </div>
+  <div class="header-tags">
+    <span class="htag">S'informer</span>
+    <span class="htag">Communiquer</span>
+    <span class="htag">Alerter</span>
+  </div>
 </div>
 
+<!-- ── Contenu ── -->
 <div class="content">
+
   <div class="sec">Services municipaux</div>
 
   <button class="card" onclick="openMel()">
     <div class="ico ico-mel">👩‍💼</div>
-    <div class="ct"><div class="ct-label">Assistante virtuelle MEL</div><div class="ct-sub">Posez vos questions à la mairie</div></div>
+    <div class="ct">
+      <div class="ct-label">Assistante virtuelle MEL</div>
+      <div class="ct-sub">Posez vos questions à la mairie</div>
+    </div>
     <span class="arr">›</span>
   </button>
 
   <a class="card" href="https://mezieres-lez-clery.fr/" target="_blank">
     <div class="ico ico-site">🌐</div>
-    <div class="ct"><div class="ct-label">Site de la commune</div><div class="ct-sub">mezieres-lez-clery.fr</div></div>
+    <div class="ct">
+      <div class="ct-label">Site de la commune</div>
+      <div class="ct-sub">mezieres-lez-clery.fr</div>
+    </div>
     <span class="arr">›</span>
   </a>
 
@@ -118,13 +420,19 @@ html,body{
 
   <a class="card" href="https://www.facebook.com/RadioMezieres" target="_blank">
     <div class="ico ico-radio">📻</div>
-    <div class="ct"><div class="ct-label">Radio Mézières</div><div class="ct-sub">Page Facebook officielle</div></div>
+    <div class="ct">
+      <div class="ct-label">Radio Mézières</div>
+      <div class="ct-sub">Page Facebook officielle</div>
+    </div>
     <span class="arr">›</span>
   </a>
 
   <a class="card" href="https://www.facebook.com/" target="_blank" id="lien-communaute">
     <div class="ico ico-hab">👥</div>
-    <div class="ct"><div class="ct-label">Communauté des habitants</div><div class="ct-sub">Groupe Facebook Macériens</div></div>
+    <div class="ct">
+      <div class="ct-label">Communauté des habitants</div>
+      <div class="ct-sub">Groupe Facebook Macériens</div>
+    </div>
     <span class="arr">›</span>
   </a>
 
@@ -132,13 +440,19 @@ html,body{
 
   <a class="card" href="https://calendar.google.com/calendar/u/1?cid=MWQ0OGYxNGI1OWUxMjkwNzkxN2ZmNjY5ZDA0MzdlMjlhMDZhNzU3OGE2OGQxNGQ3NjFlNjY5NzUwZTc3NzZiNEBncm91cC5jYWxlbmRhci5nb29nbGUuY29t" target="_blank">
     <div class="ico ico-cal">📅</div>
-    <div class="ct"><div class="ct-label">Calendrier communal</div><div class="ct-sub">Manifestations et événements</div></div>
+    <div class="ct">
+      <div class="ct-label">Calendrier communal</div>
+      <div class="ct-sub">Manifestations et événements</div>
+    </div>
     <span class="arr">›</span>
   </a>
 
   <a class="card" href="https://mairie-mezieres.github.io/randonnees/" target="_blank">
     <div class="ico ico-rando">🥾</div>
-    <div class="ct"><div class="ct-label">Randonnées</div><div class="ct-sub">14 circuits balisés</div></div>
+    <div class="ct">
+      <div class="ct-label">Randonnées</div>
+      <div class="ct-sub">14 circuits balisés</div>
+    </div>
     <span class="arr">›</span>
   </a>
 
@@ -146,104 +460,166 @@ html,body{
 
   <a class="card" href="https://app.panneaupocket.com/ville/1115293898-mezieres-lez-clery-45370" target="_blank">
     <div class="ico ico-pocket">📢</div>
-    <div class="ct"><div class="ct-label">Panneau Pocket</div><div class="ct-sub">Alertes et notifications officielles</div></div>
+    <div class="ct">
+      <div class="ct-label">Panneau Pocket</div>
+      <div class="ct-sub">Alertes et notifications officielles</div>
+    </div>
     <span class="arr">›</span>
   </a>
 
-  <div class="sec">Application</div>
-
-  <button class="card" onclick="installApp()" id="btn-install">
-    <div class="ico ico-install">📲</div>
-    <div class="ct"><div class="ct-label">Installer l'application</div><div class="ct-sub">Ajouter à l'écran d'accueil</div></div>
-    <span class="arr">›</span>
-  </button>
 </div>
 
 <div class="footer">Application officielle · Mairie de Mézières-lez-Cléry · 45370 · Loiret</div>
 
-<!-- Overlay MEL -->
+<!-- ═══════════════════════════════════
+     OVERLAY MEL
+═══════════════════════════════════ -->
 <div class="ov" id="ov" onclick="ovClick(event)">
   <div class="panel">
     <div class="mhd">
       <div class="mav">👩‍💼</div>
-      <div><div class="mname">MEL — Mézières En Ligne</div><div class="mstat">Assistante virtuelle de la mairie</div></div>
+      <div>
+        <div class="mname">MEL — Mézières En Ligne</div>
+        <div class="mstat">Assistante virtuelle de la mairie</div>
+      </div>
       <button class="mcls" onclick="closeMel()">✕</button>
     </div>
     <div class="msgs" id="msgs"></div>
     <div class="sugs" id="sugs">
-      <button class="sug" onclick="sendSug(this)">🕐 Horaires mairie</button>
+      <button class="sug" onclick="sendSug(this)">🕐 Horaires</button>
       <button class="sug" onclick="sendSug(this)">🚌 Bus ligne 8</button>
       <button class="sug" onclick="sendSug(this)">♻️ Déchets</button>
-      <button class="sug" onclick="sendSug(this)">🏗️ Permis construire</button>
+      <button class="sug" onclick="sendSug(this)">🏗️ Permis</button>
       <button class="sug" onclick="sendSug(this)">🥾 Randonnées</button>
     </div>
     <div class="mbar">
-      <input class="minp" id="minp" placeholder="Votre question…" onkeydown="if(event.key==='Enter')sendMel()">
+      <input class="minp" id="minp" placeholder="Votre question…"
+        onkeydown="if(event.key==='Enter')sendMel()">
       <button class="msnd" onclick="sendMel()">➤</button>
     </div>
   </div>
 </div>
 
 <script>
-// VERSION 2.0
+// VERSION 2.1
 const MEL_PROXY = 'https://chatbot-mairie-mezieres.onrender.com/mel';
-let inited=false, busy=false;
-const hist=[];
+const INSTALLED_KEY = 'mezieres_installed';
 
-function openMel(){
-  document.getElementById('ov').classList.add('open');
-  document.body.style.overflow='hidden';
-  if(!inited){inited=true;addMsg('bot','🌲 Bonjour\u00a0! Je suis MEL, votre assistante virtuelle.\n\nComment puis-je vous aider\u00a0? 😊');}
-  setTimeout(()=>document.getElementById('minp').focus(),300);
-}
-function closeMel(){document.getElementById('ov').classList.remove('open');document.body.style.overflow='';}
-function ovClick(e){if(e.target===document.getElementById('ov'))closeMel();}
+// ── Bannière installation ──────────────────────────────
+let dp = null;
 
-function addMsg(role,text){
-  const c=document.getElementById('msgs');
-  const d=document.createElement('div');
-  d.className='msg '+role;
-  d.innerHTML=`<div class="mav2">${role==='bot'?'👩‍💼':'👤'}</div><div class="bub">${text.replace(/\n/g,'<br>')}</div>`;
-  c.appendChild(d);c.scrollTop=c.scrollHeight;
+// Cacher si déjà installé
+if (localStorage.getItem(INSTALLED_KEY)) {
+  document.getElementById('install-banner').classList.add('hidden');
 }
-function showTyping(){
-  const c=document.getElementById('msgs');
-  const d=document.createElement('div');
-  d.className='msg bot';d.id='typ';
-  d.innerHTML='<div class="mav2">👩\u200d💼</div><div class="bub"><div class="typ"><span></span><span></span><span></span></div></div>';
-  c.appendChild(d);c.scrollTop=c.scrollHeight;
-}
-async function sendMel(){
-  const inp=document.getElementById('minp');
-  const txt=inp.value.trim();
-  if(!txt||busy)return;
-  inp.value='';
-  document.getElementById('sugs').style.display='none';
-  addMsg('user',txt);
-  hist.push({role:'user',content:txt});
-  busy=true;showTyping();
-  try{
-    const r=await fetch(MEL_PROXY,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:hist.slice(-6)})});
-    const d=await r.json();
-    const rep=(d.reply||'Désolée, erreur technique. Contactez la mairie au 02 38 45 61 76.').replace(/\*\*(.*?)\*\*/g,'$1').replace(/\*(.*?)\*/g,'$1');
-    document.getElementById('typ')?.remove();
-    hist.push({role:'assistant',content:rep});
-    addMsg('bot',rep);
-  }catch(e){
-    document.getElementById('typ')?.remove();
-    addMsg('bot','Désolée, je ne peux pas répondre pour le moment.\nContactez la mairie au 02 38 45 61 76 😊');
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  dp = e;
+});
+
+window.addEventListener('appinstalled', () => {
+  localStorage.setItem(INSTALLED_KEY, '1');
+  document.getElementById('install-banner').classList.add('hidden');
+});
+
+function installApp() {
+  if (dp) {
+    dp.prompt();
+    dp.userChoice.then(r => {
+      if (r.outcome === 'accepted') {
+        localStorage.setItem(INSTALLED_KEY, '1');
+        document.getElementById('install-banner').classList.add('hidden');
+      }
+      dp = null;
+    });
+  } else {
+    alert('Pour installer :\n\niPhone/iPad : appuyez sur le bouton Partager en bas de Safari, puis "Sur l\'écran d\'accueil"\n\nAndroid : menu du navigateur (3 points) puis "Ajouter à l\'écran d\'accueil"');
   }
-  busy=false;
 }
-function sendSug(btn){document.getElementById('minp').value=btn.textContent.trim();sendMel();}
 
-let dp=null;
-window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();dp=e;});
-function installApp(){
-  if(dp){dp.prompt();dp.userChoice.then(()=>{dp=null;});}
-  else{alert("Pour installer :\n\n📱 iPhone/iPad : bouton Partager \u2192 'Sur l'écran d'accueil'\n\n🤖 Android : menu navigateur \u2192 'Ajouter à l'écran d'accueil'");}
+function hideBanner(e) {
+  e.stopPropagation();
+  document.getElementById('install-banner').classList.add('hidden');
+  localStorage.setItem(INSTALLED_KEY, 'dismissed');
 }
-if('serviceWorker' in navigator){navigator.serviceWorker.register('./service-worker.js').catch(()=>{});}
+
+// ── MEL ───────────────────────────────────────────────
+let inited = false, busy = false;
+const hist = [];
+
+function openMel() {
+  document.getElementById('ov').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  if (!inited) {
+    inited = true;
+    addMsg('bot', 'Bonjour ! Je suis MEL, votre assistante virtuelle.\n\nComment puis-je vous aider ? 😊');
+  }
+  setTimeout(() => document.getElementById('minp').focus(), 350);
+}
+function closeMel() {
+  document.getElementById('ov').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function ovClick(e) { if (e.target === document.getElementById('ov')) closeMel(); }
+
+function addMsg(role, text) {
+  const c = document.getElementById('msgs');
+  const d = document.createElement('div');
+  d.className = 'msg ' + role;
+  d.innerHTML = '<div class="mav2">' + (role==='bot'?'👩\u200d💼':'👤') + '</div>'
+    + '<div class="bub">' + text.replace(/\n/g,'<br>') + '</div>';
+  c.appendChild(d);
+  c.scrollTop = c.scrollHeight;
+}
+
+function showTyping() {
+  const c = document.getElementById('msgs');
+  const d = document.createElement('div');
+  d.className = 'msg bot'; d.id = 'typ';
+  d.innerHTML = '<div class="mav2">👩\u200d💼</div><div class="bub"><div class="typ"><span></span><span></span><span></span></div></div>';
+  c.appendChild(d);
+  c.scrollTop = c.scrollHeight;
+}
+
+async function sendMel() {
+  const inp = document.getElementById('minp');
+  const txt = inp.value.trim();
+  if (!txt || busy) return;
+  inp.value = '';
+  document.getElementById('sugs').style.display = 'none';
+  addMsg('user', txt);
+  hist.push({ role: 'user', content: txt });
+  busy = true;
+  showTyping();
+  try {
+    const r = await fetch(MEL_PROXY, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: hist.slice(-6) })
+    });
+    const d = await r.json();
+    const rep = (d.reply || 'Erreur technique. Contactez la mairie au 02 38 45 61 76.')
+      .replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1');
+    document.getElementById('typ')?.remove();
+    hist.push({ role: 'assistant', content: rep });
+    addMsg('bot', rep);
+  } catch(e) {
+    document.getElementById('typ')?.remove();
+    addMsg('bot', 'Je ne peux pas répondre pour le moment.\nContactez la mairie : 02 38 45 61 76 😊');
+  }
+  busy = false;
+}
+
+function sendSug(btn) {
+  document.getElementById('minp').value = btn.textContent.trim();
+  sendMel();
+}
+
+// ── Service Worker ─────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./service-worker.js').catch(() => {});
+}
 </script>
 </body>
 </html>
