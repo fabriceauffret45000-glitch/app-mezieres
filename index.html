@@ -8,12 +8,12 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Mézières">
 <title>Mézières-lez-Cléry</title>
-<!-- VERSION 2.1 -->
+<!-- VERSION 2.2 -->
 <link rel="manifest" href="manifest.webmanifest">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300&display=swap" rel="stylesheet">
 <style>
 /* ═══════════════════════════════════════════
-   MÉZIÈRES-LEZ-CLÉRY — PWA v2.1
+   MÉZIÈRES-LEZ-CLÉRY — PWA v2.2
    Charte : Nature & Modernité — Vert forêt,
    crème chaud, or solognot, touches de ciel.
 ═══════════════════════════════════════════ */
@@ -91,6 +91,73 @@ body {
   color: rgba(61,32,0,0.5);
   font-size: 1.1rem; cursor: pointer;
   padding: 4px; flex-shrink: 0;
+}
+
+
+/* ── Aide installation ── */
+.ih.hidden { display: none; }
+.ih {
+  position: fixed; inset: 0; z-index: 300;
+  background: rgba(26,61,43,0.55);
+  backdrop-filter: blur(5px);
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.ih-panel {
+  width: min(100%, 520px);
+  background: var(--cream);
+  border-radius: 24px 24px 0 0;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  animation: slideUp 0.22s ease;
+}
+.ih-head {
+  display: flex; align-items: center; gap: 12px;
+  padding: 18px 18px 14px;
+  background: linear-gradient(135deg, var(--forest), var(--leaf));
+  color: var(--cream);
+}
+.ih-icon {
+  width: 46px; height: 46px; border-radius: 14px;
+  background: rgba(255,255,255,0.16);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0;
+}
+.ih-title { font-size: 1rem; font-weight: 800; line-height: 1.2; }
+.ih-sub { font-size: 0.72rem; color: rgba(255,255,255,0.72); margin-top: 2px; }
+.ih-close {
+  margin-left: auto; border: none; background: rgba(255,255,255,0.12);
+  color: white; width: 34px; height: 34px; border-radius: 50%;
+  font-size: 1rem; cursor: pointer; flex-shrink: 0;
+}
+.ih-body { padding: 16px 18px 10px; }
+.ih-steps {
+  padding-left: 20px;
+  display: grid; gap: 10px;
+  color: var(--text); font-size: 0.96rem; line-height: 1.45;
+}
+.ih-tip {
+  margin-top: 14px;
+  background: #fff7df;
+  border: 1px solid rgba(212,168,67,0.28);
+  color: #5b4614;
+  border-radius: 14px;
+  padding: 11px 12px;
+  font-size: 0.82rem;
+}
+.ih-actions {
+  display: flex; gap: 10px; padding: 14px 18px 18px;
+}
+.ih-primary, .ih-secondary {
+  flex: 1; border-radius: 14px; padding: 12px 14px;
+  font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 0.92rem;
+  border: none; cursor: pointer;
+}
+.ih-primary {
+  background: linear-gradient(135deg, var(--forest), var(--leaf));
+  color: white;
+}
+.ih-secondary {
+  background: white; color: var(--text); border: 1px solid var(--border);
 }
 
 /* ── En-tête ── */
@@ -366,15 +433,36 @@ body {
 </head>
 <body>
 
-<!-- ── Bannière installation (disparaît après install) ── -->
-<div id="install-banner" onclick="installApp()">
-  <div class="ib-ico">📲</div>
+<!-- ── Bannière installation ── -->
+<div id="install-banner" class="hidden" onclick="installApp()">
+  <div class="ib-ico" id="install-ico">📲</div>
   <div class="ib-text">
-    <div class="ib-title">Installez l'application !</div>
-    <div class="ib-sub">Accès rapide depuis votre téléphone</div>
+    <div class="ib-title" id="install-title">Installez l'application</div>
+    <div class="ib-sub" id="install-sub">Accès rapide depuis votre téléphone</div>
   </div>
-  <button class="ib-btn" onclick="installApp();event.stopPropagation()">Installer</button>
+  <button class="ib-btn" id="install-btn" onclick="installApp();event.stopPropagation()">Installer</button>
   <button class="ib-close" onclick="hideBanner(event)" title="Fermer">✕</button>
+</div>
+
+<div id="install-help" class="ih hidden" aria-hidden="true" onclick="closeInstallHelp(event)">
+  <div class="ih-panel" onclick="event.stopPropagation()">
+    <div class="ih-head">
+      <div class="ih-icon" id="help-icon">📲</div>
+      <div>
+        <div class="ih-title" id="help-title">Installer l'application</div>
+        <div class="ih-sub" id="help-sub">Suivez les étapes ci-dessous</div>
+      </div>
+      <button class="ih-close" onclick="closeInstallHelp()">✕</button>
+    </div>
+    <div class="ih-body">
+      <ol id="help-steps" class="ih-steps"></ol>
+      <div class="ih-tip" id="help-tip"></div>
+    </div>
+    <div class="ih-actions">
+      <button class="ih-primary" onclick="retryInstall()">Réessayer</button>
+      <button class="ih-secondary" onclick="closeInstallHelp()">Fermer</button>
+    </div>
+  </div>
 </div>
 
 <!-- ── En-tête ── -->
@@ -384,7 +472,7 @@ body {
   <div class="header-commune">Commune de</div>
   <div class="header-title">Mézières-lez-Cléry</div>
 </div>
-    <div class="header-version-pill">v2.1</div>
+    <div class="header-version-pill">v2.2</div>
   </div>
   <div class="header-tags">
     <span class="htag">S'informer</span>
@@ -503,45 +591,171 @@ body {
 <script>
 // VERSION 2.1
 const MEL_PROXY = 'https://chatbot-mairie-mezieres.onrender.com/mel';
-const INSTALLED_KEY = 'mezieres_installed';
+const INSTALL_DISMISSED_KEY = 'mezieres_install_dismissed_until';
 
 // ── Bannière installation ──────────────────────────────
 let dp = null;
 
-// Cacher si déjà installé
-if (localStorage.getItem(INSTALLED_KEY)) {
-  document.getElementById('install-banner').classList.add('hidden');
+function isStandalone() {
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+
+function getPlatform() {
+  const ua = navigator.userAgent || navigator.vendor || '';
+  if (/android/i.test(ua)) return 'android';
+  if (/iphone|ipad|ipod/i.test(ua)) return 'ios';
+  return 'other';
+}
+
+function isChromeLikeAndroid() {
+  const ua = navigator.userAgent || '';
+  return /android/i.test(ua) && /chrome|crios|edg|opr/i.test(ua);
+}
+
+function dismissedRecently() {
+  const until = Number(localStorage.getItem(INSTALL_DISMISSED_KEY) || 0);
+  return until && Date.now() < until;
+}
+
+function setBannerCopy() {
+  const platform = getPlatform();
+  const title = document.getElementById('install-title');
+  const sub = document.getElementById('install-sub');
+  const btn = document.getElementById('install-btn');
+  const ico = document.getElementById('install-ico');
+
+  if (platform === 'ios') {
+    ico.textContent = '🍎';
+    title.textContent = "Installer sur iPhone";
+    sub.textContent = "Touchez Partager puis « Sur l'écran d'accueil »";
+    btn.textContent = "Voir comment";
+  } else if (platform === 'android') {
+    ico.textContent = '🤖';
+    title.textContent = "Installer sur Android";
+    sub.textContent = dp ? "Un vrai bouton d'installation est disponible" : "Si rien ne s'affiche, utilisez le menu ⋮";
+    btn.textContent = dp ? "Installer" : "Voir comment";
+  } else {
+    ico.textContent = '💻';
+    title.textContent = "Installer l'application";
+    sub.textContent = dp ? "Accès rapide depuis votre appareil" : "Consultez les étapes selon votre navigateur";
+    btn.textContent = dp ? "Installer" : "Voir comment";
+  }
+}
+
+function syncInstallUI() {
+  const banner = document.getElementById('install-banner');
+  if (isStandalone()) {
+    banner.classList.add('hidden');
+    return;
+  }
+  setBannerCopy();
+  if (!dismissedRecently()) banner.classList.remove('hidden');
+}
+
+function getInstallHelpContent() {
+  const platform = getPlatform();
+  if (platform === 'ios') {
+    return {
+      icon: '🍎',
+      title: 'Installer sur iPhone',
+      sub: 'Depuis Safari, en 3 étapes',
+      steps: [
+        'Ouvrez cette page dans Safari.',
+        'Touchez le bouton Partager en bas de l’écran.',
+        'Choisissez « Sur l’écran d’accueil », puis validez.'
+      ],
+      tip: "Sur iPhone, Apple n'affiche pas toujours de bouton « Installer ». C’est normal."
+    };
+  }
+  if (platform === 'android') {
+    return {
+      icon: '🤖',
+      title: 'Installer sur Android',
+      sub: dp ? 'Le bouton peut être affiché automatiquement' : 'Le navigateur ne propose pas encore le raccourci automatique',
+      steps: dp ? [
+        'Touchez « Réessayer ».',
+        'Si une fenêtre apparaît, choisissez « Installer ».',
+        'L’icône sera ajoutée sur l’écran d’accueil.'
+      ] : [
+        'Touchez le menu du navigateur (⋮ en haut à droite).',
+        'Choisissez « Ajouter à l’écran d’accueil » ou « Installer l’application ».',
+        'Validez pour créer l’icône sur le téléphone.'
+      ],
+      tip: "Sur Android, Chrome n'affiche pas toujours le bouton d'installation au premier passage. Il faut parfois visiter la page, toucher un ou deux liens, puis revenir."
+    };
+  }
+  return {
+    icon: '📲',
+    title: "Installer l'application",
+    sub: 'Suivez les options de votre navigateur',
+    steps: [
+      "Cherchez « Installer », « Ajouter à l'écran d'accueil » ou une option équivalente dans le menu du navigateur.",
+      "Si vous ne voyez rien, revenez sur cette page après quelques secondes d'utilisation.",
+      "Vous pouvez aussi essayer depuis Chrome sur Android ou Safari sur iPhone."
+    ],
+    tip: "L'installation dépend du navigateur et de l'appareil."
+  };
+}
+
+function openInstallHelp() {
+  const data = getInstallHelpContent();
+  document.getElementById('help-icon').textContent = data.icon;
+  document.getElementById('help-title').textContent = data.title;
+  document.getElementById('help-sub').textContent = data.sub;
+  document.getElementById('help-tip').textContent = data.tip;
+  const steps = document.getElementById('help-steps');
+  steps.innerHTML = data.steps.map(step => `<li>${step}</li>`).join('');
+  document.getElementById('install-help').classList.remove('hidden');
+  document.getElementById('install-help').setAttribute('aria-hidden', 'false');
+}
+
+function closeInstallHelp(e) {
+  if (e) e.stopPropagation();
+  document.getElementById('install-help').classList.add('hidden');
+  document.getElementById('install-help').setAttribute('aria-hidden', 'true');
 }
 
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
   dp = e;
+  syncInstallUI();
 });
 
 window.addEventListener('appinstalled', () => {
-  localStorage.setItem(INSTALLED_KEY, '1');
+  dp = null;
+  closeInstallHelp();
   document.getElementById('install-banner').classList.add('hidden');
 });
 
-function installApp() {
+window.addEventListener('DOMContentLoaded', syncInstallUI);
+
+function retryInstall() {
+  closeInstallHelp();
+  installApp();
+}
+
+async function installApp() {
   if (dp) {
     dp.prompt();
-    dp.userChoice.then(r => {
-      if (r.outcome === 'accepted') {
-        localStorage.setItem(INSTALLED_KEY, '1');
-        document.getElementById('install-banner').classList.add('hidden');
-      }
-      dp = null;
-    });
+    const choice = await dp.userChoice;
+    if (choice.outcome === 'accepted') {
+      document.getElementById('install-banner').classList.add('hidden');
+      closeInstallHelp();
+    } else {
+      openInstallHelp();
+    }
+    dp = null;
+    syncInstallUI();
   } else {
-    alert('Pour installer :\n\niPhone/iPad : appuyez sur le bouton Partager en bas de Safari, puis "Sur l\'écran d\'accueil"\n\nAndroid : menu du navigateur (3 points) puis "Ajouter à l\'écran d\'accueil"');
+    openInstallHelp();
   }
 }
 
 function hideBanner(e) {
   e.stopPropagation();
   document.getElementById('install-banner').classList.add('hidden');
-  localStorage.setItem(INSTALLED_KEY, 'dismissed');
+  const oneDay = 24 * 60 * 60 * 1000;
+  localStorage.setItem(INSTALL_DISMISSED_KEY, String(Date.now() + oneDay));
 }
 
 // ── MEL ───────────────────────────────────────────────
