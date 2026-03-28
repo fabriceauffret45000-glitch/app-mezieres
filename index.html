@@ -217,7 +217,7 @@ html,body{min-height:100%;background:var(--warm);font-family:'Nunito',sans-serif
 <div class="header">
   <div class="mat-hero">
     <div class="mat-text">
-      <div class="mat-badge">Application officielle</div>
+      <div class="mat-badge">MAT — Mézières Avec Toi</div>
       <div class="mat-title">Mézières-lez-Cléry</div>
       <div class="mat-sub">Commune de Mézières-lez-Cléry</div>
       <div class="mat-version">v3.2</div>
@@ -283,6 +283,19 @@ html,body{min-height:100%;background:var(--warm);font-family:'Nunito',sans-serif
     </a>
   </div>
 
+  <div class="sec">Participez &amp; signalez</div>
+  <div class="grid2">
+    <button class="card" onclick="openSignal()">
+      <div class="ico ico-signal">🚨</div>
+      <div class="ct"><div class="ct-label">Signalement</div><div class="ct-sub">Problème voirie…</div></div>
+    </button>
+    <button class="card" onclick="openIdees()">
+      <div class="ico ico-ideas">💡</div>
+      <div class="ct"><div class="ct-label">Vos idées</div><div class="ct-sub">Boîte à idées</div></div>
+    </button>
+  </div>
+
+
   <div class="sec">Agenda &amp; sorties</div>
   <div class="grid2">
     <a class="card" href="https://calendar.google.com/calendar/u/1?cid=MWQ0OGYxNGI1OWUxMjkwNzkxN2ZmNjY5ZDA0MzdlMjlhMDZhNzU3OGE2OGQxNGQ3NjFlNjY5NzUwZTc3NzZiNEBncm91cC5jYWxlbmRhci5nb29nbGUuY29t" target="_blank">
@@ -297,17 +310,6 @@ html,body{min-height:100%;background:var(--warm);font-family:'Nunito',sans-serif
 
 
 
-  <div class="sec">Participez &amp; signalez</div>
-  <div class="grid2">
-    <button class="card" onclick="openSignal()">
-      <div class="ico ico-signal">🚨</div>
-      <div class="ct"><div class="ct-label">Signalement</div><div class="ct-sub">Problème voirie…</div></div>
-    </button>
-    <button class="card" onclick="openIdees()">
-      <div class="ico ico-ideas">💡</div>
-      <div class="ct"><div class="ct-label">Vos idées</div><div class="ct-sub">Boîte à idées</div></div>
-    </button>
-  </div>
 
   <div class="sec">Informations</div>
   <div class="grid2">
@@ -856,7 +858,7 @@ function urlBase64ToUint8Array(b64){
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('./service-worker.js').catch(()=>{}); }
 
 // ── Déchets ───────────────────────────────────────────────────
-// Ordures ménagères : chaque lundi (sortir dimanche soir)
+// Bac noir : chaque lundi (sortir dimanche soir)
 // Bac jaune (recyclables) : mardi des semaines paires (sauf si férié → mercredi)
 
 const JOURS_FERIES_2025_2026 = [
@@ -928,7 +930,7 @@ function loadDechets() {
 
   // OM
   const nextOM = getNextCollecteOM(now);
-  const msgOM = formatCollecteMsg(nextOM, 'OM');
+  const msgOM = formatCollecteMsg(nextOM, 'Bac noir');
   const omEl = document.getElementById('om-text');
   if (omEl) {
     omEl.textContent = msgOM.txt;
@@ -939,7 +941,7 @@ function loadDechets() {
   const nextTri = getNextCollecteTri(now);
   const triEl = document.getElementById('tri-text');
   if (triEl && nextTri) {
-    const msgTri = formatCollecteMsg(nextTri, '🟡 Bac jaune');
+    const msgTri = formatCollecteMsg(nextTri, 'Bac jaune');
     triEl.textContent = msgTri.txt;
     if (msgTri.urgent) triEl.style.color = '#ffd580';
   }
@@ -953,34 +955,30 @@ function openDechets() {
   const dow = now.getDay(); // 0=dim
   const h = now.getHours();
 
-  // Horaires déchetterie du réseau CCTVL (Cléry-Saint-André)
-  const horaires = {
-    1: { label:'Lundi',    h:'9h–12h / 14h–17h30' },
-    2: { label:'Mardi',    h:'Fermé' },
-    3: { label:'Mercredi', h:'9h–12h / 14h–17h30' },
-    4: { label:'Jeudi',    h:'Fermé' },
-    5: { label:'Vendredi', h:'9h–12h / 14h–17h30' },
-    6: { label:'Samedi',   h:'9h–12h / 14h–17h30' },
-    0: { label:'Dimanche', h:'Fermé' },
-  };
-
-  let statusHTML = '';
-  const hAujourdhui = horaires[dow];
-  const isOuvert = hAujourdhui.h !== 'Fermé' && (
-    (h >= 9 && h < 12) || (h >= 14 && h < 17) || (h === 17 && now.getMinutes() < 30)
-  );
-  if (hAujourdhui.h === 'Fermé') {
-    statusHTML = '<div style="background:#fde8e8;border-radius:10px;padding:10px 13px;margin-bottom:12px;font-weight:800;color:#c00">🔴 Fermé aujourd’hui</div>';
-  } else if (isOuvert) {
-    statusHTML = '<div style="background:#eefaf4;border-radius:10px;padding:10px 13px;margin-bottom:12px;font-weight:800;color:#2d6a4f">🟢 Ouverte maintenant · ' + hAujourdhui.h + '</div>';
+  // Horaires déchetterie Cléry-Saint-André
+  // Hiver (oct-mars) : lun-sam 10h-12h / 14h-17h
+  // Été  (avr-sep)  : lun-sam  9h-12h / 14h-18h
+  const mois = now.getMonth() + 1;
+  const isHiver = mois >= 10 || mois <= 3;
+  const matin = isHiver ? {o:10, f:12} : {o:9,  f:12};
+  const aprem = isHiver ? {o:14, f:17} : {o:14, f:18};
+  const isJourOuvre = dow >= 1 && dow <= 6;
+  const m = now.getMinutes();
+  let ouvert = false, prochaine = '';
+  if (!isJourOuvre) {
+    prochaine = 'Ouvre lundi à ' + matin.o + 'h';
+  } else if (h < matin.o) {
+    prochaine = 'Ouvre à ' + matin.o + 'h';
+  } else if (h < matin.f) {
+    ouvert = true; prochaine = 'Ferme à ' + matin.f + 'h';
+  } else if (h < aprem.o) {
+    prochaine = 'Ouvre à ' + aprem.o + 'h';
+  } else if (h < aprem.f) {
+    ouvert = true; prochaine = 'Ferme à ' + aprem.f + 'h';
   } else {
-    statusHTML = '<div style="background:#fff7ed;border-radius:10px;padding:10px 13px;margin-bottom:12px;font-weight:800;color:#9a3412">🟡 Fermée · Horaires aujourd’hui : ' + hAujourdhui.h + '</div>';
+    prochaine = dow < 6 ? 'Ouvre demain à ' + matin.o + 'h' : 'Ouvre lundi à ' + matin.o + 'h';
   }
-
-  const tableRows = Object.values(horaires).map(j =>
-    `<tr><td style="padding:6px 10px;font-weight:${horaires[dow].label===j.label?'800':'400'};color:${horaires[dow].label===j.label?'var(--forest)':'var(--muted)'}">${j.label}</td><td style="padding:6px 10px;color:${j.h==='Fermé'?'#aaa':'var(--text)'}">${j.h}</td></tr>`
-  ).join('');
-
+    
   const nextOM2 = getNextCollecteOM(now);
   const nextTri2 = getNextCollecteTri(now);
   const JOURS_NOM = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
@@ -988,14 +986,16 @@ function openDechets() {
   el.innerHTML = statusHTML +
     `<div style="font-size:0.72rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Horaires déchetterie — Cléry-Saint-André</div>
     <table style="width:100%;border-collapse:collapse;font-size:0.82rem;margin-bottom:16px;background:white;border-radius:12px;overflow:hidden">
-      <tr style="background:var(--mist)"><th style="padding:7px 10px;text-align:left;color:var(--leaf)">Jour</th><th style="padding:7px 10px;text-align:left;color:var(--leaf)">Horaires</th></tr>
-      ${tableRows}
+      <tr style="background:var(--mist)"><th style="padding:7px 10px;text-align:left;color:var(--leaf)">Période</th><th style="padding:7px 10px;text-align:left;color:var(--leaf)">Horaires (lun–sam)</th></tr>
+      <tr><td style="padding:7px 10px;color:var(--muted)">Hiver (oct → mars)</td><td style="padding:7px 10px">10h–12h / 14h–17h</td></tr>
+      <tr><td style="padding:7px 10px;color:var(--muted)">Été (avr → sep)</td><td style="padding:7px 10px">9h–12h / 14h–18h</td></tr>
+      <tr><td style="padding:7px 10px;color:#aaa">Dimanche</td><td style="padding:7px 10px;color:#aaa">Fermé</td></tr>
     </table>
     <div style="font-size:0.72rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Prochaines collectes</div>
     <div style="background:white;border-radius:12px;padding:12px;font-size:0.84rem">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
         <span style="font-size:1.4rem">🗑️</span>
-        <div><div style="font-weight:700;color:var(--text)">Ordures ménagères</div>
+        <div><div style="font-weight:700;color:var(--text)">Bac noir</div>
         <div style="font-size:0.72rem;color:var(--muted)">${JOURS_NOM[nextOM2.getDay()]} ${nextOM2.getDate()}/${nextOM2.getMonth()+1} — Sortir le dimanche soir</div></div>
       </div>
       <div style="display:flex;align-items:center;gap:10px">
