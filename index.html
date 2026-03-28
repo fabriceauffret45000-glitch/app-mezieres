@@ -4,11 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#1a3d2b">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="MAT">
 <title>MAT — Mézières Avec Toi</title>
-<!-- VERSION 3.0 -->
+<!-- VERSION 3.1 -->
 <link rel="manifest" href="manifest.webmanifest">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fraunces:opsz,wght@9..144,300;9..144,600&display=swap" rel="stylesheet">
 <style>
@@ -212,9 +213,9 @@ html,body{min-height:100%;background:var(--warm);font-family:'Nunito',sans-serif
   <div class="mat-hero">
     <div class="mat-text">
       <div class="mat-badge">Application officielle</div>
-      <div class="mat-title">Mézières<br>Avec Toi</div>
+      <div class="mat-title">Mézières-lez-Cléry</div>
       <div class="mat-sub">Commune de Mézières-lez-Cléry</div>
-      <div class="mat-version">v3.0</div>
+      <div class="mat-version">v3.1</div>
     </div>
     <img src="mat-header.png" alt="MAT" class="mat-img" onerror="this.style.display='none'">
   </div>
@@ -256,6 +257,12 @@ html,body{min-height:100%;background:var(--warm);font-family:'Nunito',sans-serif
       <div class="ico ico-radio">📻</div>
       <div class="ct"><div class="ct-label">Radio Mézières</div><div class="ct-sub">Facebook</div></div>
     </a>
+    <button class="card" onclick="openNotifs()">
+      <div class="ico ico-notif">🔔</div>
+      <div class="ct"><div class="ct-label">Actualités MAT</div><div class="ct-sub">Publications Radio</div></div>
+    </button>
+  </div>
+  <div class="grid2" style="margin-top:9px">
     <a class="card" href="https://www.facebook.com/" target="_blank" id="lien-communaute">
       <div class="ico ico-hab">👥</div>
       <div class="ct"><div class="ct-label">Communauté</div><div class="ct-sub">Habitants</div></div>
@@ -274,7 +281,9 @@ html,body{min-height:100%;background:var(--warm);font-family:'Nunito',sans-serif
     </a>
   </div>
 
-  <div class="sec">Participez</div>
+
+
+  <div class="sec">Participez &amp; signalez</div>
   <div class="grid2">
     <button class="card" onclick="openSignal()">
       <div class="ico ico-signal">🚨</div>
@@ -286,26 +295,19 @@ html,body{min-height:100%;background:var(--warm);font-family:'Nunito',sans-serif
     </button>
   </div>
 
-  <div class="sec">Notifications &amp; infos</div>
+  <div class="sec">Informations</div>
   <div class="grid2">
-    <a class="card" href="https://app.panneaupocket.com/ville/1115293898-mezieres-lez-clery-45370" target="_blank">
-      <div class="ico ico-pocket">📢</div>
-      <div class="ct"><div class="ct-label">Panneau Pocket</div><div class="ct-sub">Alertes officielles</div></div>
-    </a>
-    <button class="card" onclick="openNotifs()">
-      <div class="ico ico-notif">🔔</div>
-      <div class="ct"><div class="ct-label">Actualités MAT</div><div class="ct-sub">Publications Radio</div></div>
-    </button>
-  </div>
-
-  <div class="grid2" style="margin-top:9px">
     <button class="card" onclick="openRgpd()">
       <div class="ico ico-rgpd">🔒</div>
       <div class="ct"><div class="ct-label">Données perso</div><div class="ct-sub">RGPD &amp; vie privée</div></div>
     </button>
+
+  </div>
+
+  <div class="grid2" style="margin-top:9px">
     <button class="card" onclick="installApp()">
       <div class="ico" style="background:linear-gradient(135deg,#f0f8e8,#d4f0d4)">📲</div>
-      <div class="ct"><div class="ct-label">Installer l'app</div><div class="ct-sub">Écran d'accueil</div></div>
+      <div class="ct"><div class="ct-label">Installer MAT</div><div class="ct-sub">Écran d'accueil</div></div>
     </button>
   </div>
 
@@ -507,7 +509,7 @@ html,body{min-height:100%;background:var(--warm);font-family:'Nunito',sans-serif
 const MEL_PROXY  = 'https://chatbot-mairie-mezieres.onrender.com/mel';
 const SIGNAL_URL = 'https://chatbot-mairie-mezieres.onrender.com/signal';
 const ACTU_URL   = 'https://chatbot-mairie-mezieres.onrender.com/actus';
-const ICAL_URL   = 'https://calendar.google.com/calendar/ical/1d48f14b59e12907917ff669d0437e29a06a7578a68d14d761e669750e7776b4%40group.calendar.google.com/private-ee29dc4f9f6a7c36809edf58f64a6469/basic.ics';
+const ICAL_URL   = 'https://chatbot-mairie-mezieres.onrender.com/calendar-proxy';
 const VAPID_PUB  = 'BNB6bL64B5oCbb9XYqQx37hGt9ZIdcXFuJvepRTRfpIiu146XfaoTtVVFgjbteSGq0Z7Kreo7oOYcGO3Kk4YAtA';
 const INSTALL_KEY = 'mat_installed_v3';
 
@@ -719,38 +721,53 @@ function selIdeaCat(btn, cat){
 function getIdeas(){ try{ return JSON.parse(localStorage.getItem(IDEAS_KEY)||'[]'); }catch(e){return[];} }
 function getVotes(){ try{ return JSON.parse(localStorage.getItem(VOTES_KEY)||'{}'); }catch(e){return {};} }
 
-function submitIdee(){
+async function submitIdee(){
   const txt = document.getElementById('idea-input').value.trim();
   if(!txt){ alert('Veuillez écrire votre idée !'); return; }
-  const ideas = getIdeas();
   const idea = { id: Date.now(), text: txt, cat: ideaCat||'💡 Autre', votes: 0, date: new Date().toLocaleDateString('fr-FR') };
+  // Stocker localement
+  const ideas = getIdeas();
   ideas.unshift(idea);
   localStorage.setItem(IDEAS_KEY, JSON.stringify(ideas));
+  // Envoyer au serveur pour partage
+  try {
+    await fetch('https://chatbot-mairie-mezieres.onrender.com/idee', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(idea)
+    });
+  } catch(e) { /* si hors ligne, stocké localement seulement */ }
   document.getElementById('idea-input').value='';
   ideaCat=''; document.querySelectorAll('.idea-cat').forEach(b=>b.classList.remove('on'));
   loadIdees();
 }
 
-function voteIdee(id){
+async function voteIdee(id){
   const votes = getVotes();
-  const ideas = getIdeas();
-  if(votes[id]){ return; } // déjà voté
-  const idx = ideas.findIndex(i=>i.id===id);
-  if(idx<0)return;
-  ideas[idx].votes = (ideas[idx].votes||0)+1;
+  if(votes[id]) return; // déjà voté
   votes[id] = 1;
-  localStorage.setItem(IDEAS_KEY, JSON.stringify(ideas));
   localStorage.setItem(VOTES_KEY, JSON.stringify(votes));
+  try {
+    await fetch('https://chatbot-mairie-mezieres.onrender.com/idee/'+id+'/vote', { method:'POST' });
+  } catch(e) { /* hors ligne */ }
   loadIdees();
 }
 
-function loadIdees(){
-  const ideas = getIdeas();
+async function loadIdees(){
   const votes = getVotes();
   const el = document.getElementById('ideas-list');
-  if(!ideas.length){ el.innerHTML='<div class="no-ideas">Aucune idée pour l\'instant.<br>Soyez le premier à proposer\u00a0!</div>'; return; }
-  const sorted = [...ideas].sort((a,b)=>b.votes-a.votes);
-  el.innerHTML = sorted.map(idea=>`
+  el.innerHTML='<div class="no-ideas">Chargement…</div>';
+  let ideas = [];
+  try {
+    const r = await fetch('https://chatbot-mairie-mezieres.onrender.com/idees');
+    const d = await r.json();
+    ideas = d.idees || [];
+    const local = getIdeas().filter(li => !ideas.find(si => si.id === li.id));
+    ideas = [...local, ...ideas].sort((a,b)=>(b.votes||0)-(a.votes||0));
+  } catch(e) {
+    ideas = getIdeas().sort((a,b)=>(b.votes||0)-(a.votes||0));
+  }
+  if(!ideas.length){ el.innerHTML='<div class="no-ideas">Aucune idée pour l'instant.<br>Soyez le premier à proposer !</div>'; return; }
+  el.innerHTML = ideas.map(idea=>`
     <div class="idea-card">
       <div class="idea-votes">
         <button class="vote-btn ${votes[idea.id]?'voted':''}" onclick="voteIdee(${idea.id})">👍</button>
@@ -764,57 +781,4 @@ function loadIdees(){
     </div>`).join('');
 }
 
-// ── Actualités (publications Radio Mézières) ──
-async function loadActus(){
-  const el = document.getElementById('actu-list');
-  try{
-    const r = await fetch(ACTU_URL);
-    const d = await r.json();
-    if(!d.actus||!d.actus.length){ el.innerHTML='<div class="actu-empty">Aucune publication récente.<br>Publiez sur Facebook avec #app-mezieres</div>'; return; }
-    el.innerHTML = d.actus.map(a=>`
-      <div class="actu-item">
-        <div class="actu-dot"></div>
-        <div>
-          <div class="actu-title">${a.title}</div>
-          <div class="actu-date">${a.date}</div>
-        </div>
-      </div>`).join('');
-  }catch(e){
-    el.innerHTML='<div class="actu-empty">Actualités indisponibles.<br>Consultez <a href="https://www.facebook.com/RadioMezieres" target="_blank" style="color:var(--leaf)">Radio Mézières</a></div>';
-  }
-}
 
-// ── Notifications Push ────────────────
-let pushRegistered = false;
-async function togglePush(){
-  const btn = document.getElementById('push-btn');
-  if(pushRegistered){ btn.textContent='Activer'; btn.classList.add('off'); pushRegistered=false; return; }
-  if(!('Notification' in window)){ alert('Notifications non supportées sur ce navigateur.'); return; }
-  const perm = await Notification.requestPermission();
-  if(perm !== 'granted'){ alert('Notifications refusées. Modifiez les paramètres de votre navigateur.'); return; }
-  if('serviceWorker' in navigator){
-    try{
-      const reg = await navigator.serviceWorker.ready;
-      const sub = await reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey:urlBase64ToUint8Array(VAPID_PUB) });
-      await fetch('https://chatbot-mairie-mezieres.onrender.com/push/subscribe', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(sub) });
-      btn.textContent='Désactiver'; btn.classList.remove('off'); pushRegistered=true;
-      alert('✅ Notifications activées\u00a0! Vous serez alerté des nouvelles publications Radio Mézières.');
-    }catch(e){ alert('Erreur lors de l\'activation des notifications.'); }
-  }
-}
-
-function urlBase64ToUint8Array(b64){
-  const pad = '='.repeat((4-b64.length%4)%4);
-  const raw = atob((b64+pad).replace(/-/g,'+').replace(/_/g,'/'));
-  return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)));
-}
-
-// ── Service Worker ────────────────────
-if('serviceWorker' in navigator){ navigator.serviceWorker.register('./service-worker.js').catch(()=>{}); }
-
-// ── Init ──────────────────────────────
-loadMeteo();
-loadEvents();
-</script>
-</body>
-</html>
