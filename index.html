@@ -190,10 +190,14 @@ html,body{min-height:100%;background:var(--warm);font-family:'Nunito',sans-serif
 .notif-sub{font-size:0.7rem;color:var(--muted);margin-top:2px;}
 .notif-btn{background:linear-gradient(135deg,var(--forest),var(--leaf));color:white;border:none;border-radius:10px;padding:8px 14px;font-family:'Nunito',sans-serif;font-size:0.76rem;font-weight:800;cursor:pointer;flex-shrink:0;}
 .notif-btn.off{background:var(--warm);color:var(--muted);border:1px solid var(--border);}
-.actu-item{background:white;border-radius:12px;padding:12px 13px;margin-bottom:8px;border:1px solid var(--border);display:flex;gap:10px;align-items:flex-start;}
+.actu-item{background:white;border-radius:14px;margin-bottom:10px;border:1px solid var(--border);overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.06);}
+.actu-img{width:100%;height:160px;object-fit:cover;display:block;background:var(--mist);}
+.actu-body{padding:12px 14px;}
 .actu-dot{width:7px;height:7px;border-radius:50%;background:var(--gold);margin-top:5px;flex-shrink:0;}
-.actu-title{font-size:0.82rem;font-weight:700;color:var(--forest);}
-.actu-date{font-size:0.65rem;color:var(--muted);margin-top:2px;}
+.actu-title{font-size:0.85rem;font-weight:700;color:var(--forest);line-height:1.45;margin-bottom:4px;}
+.actu-text{font-size:0.78rem;color:var(--muted);line-height:1.55;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+.actu-date{font-size:0.65rem;color:var(--muted);}
+.actu-fb-link{display:inline-flex;align-items:center;gap:4px;font-size:0.68rem;font-weight:700;color:#1877f2;margin-top:6px;text-decoration:none;}
 .actu-empty{text-align:center;padding:24px;color:var(--muted);font-size:0.8rem;}
 
 /* ── Footer ── */
@@ -1036,20 +1040,36 @@ window.addEventListener('appinstalled', () => {
 // ── Actualités (publications Radio Mézières) ──
 async function loadActus(){
   const el = document.getElementById('actu-list');
+  el.innerHTML = '<div class="actu-empty">Chargement…</div>';
   try{
     const r = await fetch(ACTU_URL);
     const d = await r.json();
-    if(!d.actus||!d.actus.length){ el.innerHTML='<div class="actu-empty">Aucune publication récente.<br>Publiez sur Facebook avec #app-mezieres</div>'; return; }
-    el.innerHTML = d.actus.map(a=>`
-      <div class="actu-item">
-        <div class="actu-dot"></div>
-        <div>
-          <div class="actu-title">${a.title}</div>
-          <div class="actu-date">${a.date}</div>
+    if(!d.actus||!d.actus.length){
+      el.innerHTML='<div class="actu-empty">Aucune publication récente.<br><br>Publiez sur Radio Mézières avec <strong>#app-mezieres</strong> pour que les publications apparaissent ici.</div>';
+      return;
+    }
+    el.innerHTML = d.actus.map(a => {
+      const imgHTML = a.photo
+        ? `<img class="actu-img" src="${a.photo}" alt="" onerror="this.style.display='none'">`
+        : '';
+      // Nettoyer le titre : retirer #app-mezieres et tronquer
+      const texte = (a.title||'').replace(/#app-mezieres/gi,'').trim();
+      const titre = texte.length > 80 ? texte.substring(0,80)+'...' : texte;
+      const texteComplet = texte.length > 80 ? texte : '';
+      return `<div class="actu-item">
+        ${imgHTML}
+        <div class="actu-body">
+          <div class="actu-title">${titre}</div>
+          ${texteComplet ? `<div class="actu-text">${texteComplet}</div>` : ''}
+          <div class="actu-date">📅 ${a.date}</div>
+          <a class="actu-fb-link" href="https://www.facebook.com/RadioMezieres" target="_blank">
+            📘 Voir sur Facebook
+          </a>
         </div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
   }catch(e){
-    el.innerHTML='<div class="actu-empty">Actualités indisponibles.<br>Consultez <a href="https://www.facebook.com/RadioMezieres" target="_blank" style="color:var(--leaf)">Radio Mézières</a></div>';
+    el.innerHTML='<div class="actu-empty">Actualités indisponibles.<br><a href="https://www.facebook.com/RadioMezieres" target="_blank" style="color:var(--leaf)">Voir Radio Mézières sur Facebook →</a></div>';
   }
 }
 
@@ -1086,6 +1106,17 @@ loadDechets();
 updateInstallBtn();
 // Rafraîchir les infos déchets toutes les minutes
 setInterval(loadDechets, 60000);
+
+// ── Service Worker ────────────────────────────────────────────
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
+  // Écouter les messages du SW (clic sur notification → ouvrir actualités)
+  navigator.serviceWorker.addEventListener('message', e => {
+    if(e.data?.action === 'openNotifs') openNotifs();
+  });
+}
+// Si l'app est lancée depuis une notification
+if(location.hash === '#notifs') { setTimeout(()=>openNotifs(), 600); }
 
 </script>
 </body>
