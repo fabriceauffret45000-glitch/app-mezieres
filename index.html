@@ -222,7 +222,7 @@ html,body{min-height:100%;background:var(--warm);font-family:'Nunito',sans-serif
   <div class="mat-hero">
     <div class="mat-text">
       <div class="mat-badge">Application officielle</div>
-      <div class="mat-title">Mézières Avec Toi</div>
+      <div class="mat-title">MAT, Mézières Avec Toi</div>
       <div class="mat-sub">Commune de Mézières-lez-Cléry</div>
       <div class="mat-version">v3.2</div>
     </div>
@@ -611,7 +611,7 @@ function hideBanner(e){ e.stopPropagation(); document.getElementById('install-ba
 function openMel(){openOv('mel'); if(!melInited){melInited=true;addMsg('bot','Bonjour\u00a0! Je suis MEL, votre assistante virtuelle.\n\nComment puis-je vous aider\u00a0? \ud83d\ude0a');} setTimeout(()=>document.getElementById('minp').focus(),300);}
 function openSignal(){openOv('signal');}
 function openIdees(){openOv('idees'); loadIdees();}
-function openNotifs(){openOv('notifs'); loadActus();}
+function openNotifs(){openOv('notifs'); loadActus(); checkPushStatus();}
 function openRgpd(){openOv('rgpd');}
 function openMeteo(){openOv('meteo'); loadMeteoDetail();}
 
@@ -1075,9 +1075,42 @@ async function loadActus(){
 
 // ── Notifications Push ────────────────
 let pushRegistered = false;
+async function checkPushStatus() {
+  // Vérifier si on est déjà abonné côté navigateur
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.getSubscription();
+    const btn = document.getElementById('push-btn');
+    if (sub) {
+      // On a une subscription dans le navigateur — vérifier qu'elle est sur le serveur
+      pushRegistered = true;
+      if (btn) { btn.textContent = 'Désactiver'; btn.classList.remove('off'); }
+    } else {
+      pushRegistered = false;
+      if (btn) { btn.textContent = 'Activer'; btn.classList.add('off'); }
+    }
+  } catch(e) { /* silencieux */ }
+}
+
 async function togglePush(){
   const btn = document.getElementById('push-btn');
-  if(pushRegistered){ btn.textContent='Activer'; btn.classList.add('off'); pushRegistered=false; return; }
+  if(pushRegistered){
+    // Désabonner
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.getSubscription();
+      if (sub) {
+        await fetch('https://chatbot-mairie-mezieres.onrender.com/push/unsubscribe', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ endpoint: sub.endpoint })
+        });
+        await sub.unsubscribe();
+      }
+    } catch(e) { /* silencieux */ }
+    btn.textContent='Activer'; btn.classList.add('off'); pushRegistered=false;
+    return;
+  }
   if(!('Notification' in window)){ alert('Notifications non supportées sur ce navigateur.'); return; }
   const perm = await Notification.requestPermission();
   if(perm !== 'granted'){ alert('Notifications refusées. Modifiez les paramètres de votre navigateur.'); return; }
@@ -1087,10 +1120,11 @@ async function togglePush(){
       const sub = await reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey:urlBase64ToUint8Array(VAPID_PUB) });
       await fetch('https://chatbot-mairie-mezieres.onrender.com/push/subscribe', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(sub) });
       btn.textContent='Désactiver'; btn.classList.remove('off'); pushRegistered=true;
-      alert('✅ Notifications activées\u00a0! Vous serez alerté des nouvelles publications Radio Mézières.');
-    }catch(e){ alert('Erreur lors de l\'activation des notifications.'); }
+      alert('✅ Notifications activées ! Vous serez alerté des nouvelles publications Radio Mézières.');
+    }catch(e){ alert('Erreur lors de l’activation des notifications.'); }
   }
 }
+
 
 function urlBase64ToUint8Array(b64){
   const pad = '='.repeat((4-b64.length%4)%4);
