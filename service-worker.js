@@ -1,6 +1,6 @@
 // SERVICE WORKER v3.1 — MAT Mézières Avec Toi
 // Network First — mises à jour automatiques garanties
-const CACHE = 'mat-v3.1';
+const CACHE = 'mat-v3.2';
 
 self.addEventListener('install', e => {
   self.skipWaiting();
@@ -56,10 +56,17 @@ self.addEventListener('notificationclick', e => {
   e.notification.close();
   const url = e.notification.data?.url || './';
   e.waitUntil(
-    clients.matchAll({ type: 'window' }).then(cls => {
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(cls => {
+      // Chercher une fenêtre MAT déjà ouverte
       const existing = cls.find(c => c.url.includes('mairie-mezieres'));
-      if (existing) existing.focus();
-      else clients.openWindow(url);
+      if (existing) {
+        existing.focus();
+        // Envoyer un message pour naviguer vers les actualités
+        existing.postMessage({ action: 'openNotifs' });
+      } else {
+        // Ouvrir l'app sur l'onglet actualités
+        clients.openWindow(url + '#notifs');
+      }
     })
   );
 });
