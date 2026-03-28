@@ -217,8 +217,8 @@ html,body{min-height:100%;background:var(--warm);font-family:'Nunito',sans-serif
 <div class="header">
   <div class="mat-hero">
     <div class="mat-text">
-      <div class="mat-badge">Application officielle</div>
-      <div class="mat-title">MAT — Mézières Avec Toi</div>
+      <div class="mat-badge">MAT — Mézières Avec Toi</div>
+      <div class="mat-title">Mézières-lez-Cléry</div>
       <div class="mat-sub">Commune de Mézières-lez-Cléry</div>
       <div class="mat-version">v3.2</div>
     </div>
@@ -235,11 +235,14 @@ html,body{min-height:100%;background:var(--warm);font-family:'Nunito',sans-serif
       </div>
       <div class="meteo-alerte" id="meteo-alerte" style="display:none"></div>
     </div>
-    <div class="dechets-strip">
-      <div class="dechet-row" id="dechet-poubelle"></div>
+    <div class="dechets-strip" onclick="openDechets()" style="cursor:pointer">
+      <div class="dechet-row" id="dechet-poubelle">
+        <span class="dechet-ico">🗑️</span>
+        <span id="om-text" style="font-size:0.65rem;color:rgba(216,243,220,0.9)">Chargement…</span>
+      </div>
       <div class="dechet-row" id="dechet-dechetterie">
-        <span class="dechet-ico">♻️</span>
-        <a href="https://www.ccterresduvaldeloire.fr/dechets/dechetteries/" target="_blank" style="color:var(--cream);font-size:0.68rem;font-weight:700;text-decoration:underline;text-underline-offset:2px;">Réseau déchetteries →</a>
+        <span class="dechet-ico">🏭</span>
+        <span id="dechetterie-text" style="font-size:0.65rem;color:rgba(216,243,220,0.9)">Chargement…</span>
       </div>
     </div>
   </div>
@@ -808,211 +811,51 @@ async function loadIdees(){
       </div>
     </div>`).join('');
 }
+// ── Déchetterie & Bacs ───────────────────────────────────────
+function getWeekNumber(d){const j=new Date(d.getFullYear(),0,1);return Math.ceil((((d-j)/86400000)+j.getDay()+1)/7);}
 
-// ── Actualités (publications Radio Mézières) ──
-async function loadActus(){
-  const el = document.getElementById('actu-list');
-  try{
-    const r = await fetch(ACTU_URL);
-    const d = await r.json();
-    if(!d.actus||!d.actus.length){ el.innerHTML='<div class="actu-empty">Aucune publication récente.<br>Publiez sur Facebook avec #app-mezieres</div>'; return; }
-    el.innerHTML = d.actus.map(a=>`
-      <div class="actu-item">
-        <div class="actu-dot"></div>
-        <div>
-          <div class="actu-title">${a.title}</div>
-          <div class="actu-date">${a.date}</div>
-        </div>
-      </div>`).join('');
-  }catch(e){
-    el.innerHTML='<div class="actu-empty">Actualités indisponibles.<br>Consultez <a href="https://www.facebook.com/RadioMezieres" target="_blank" style="color:var(--leaf)">Radio Mézières</a></div>';
-  }
+function loadDechets(){
+  const now=new Date();
+  const fmt=now.toLocaleString('fr-FR',{timeZone:'Europe/Paris',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false});
+  const [dp,tp]=fmt.split(', ');
+  const [jour,moisP,annee]=dp.split('/').map(Number);
+  const [hP,minP]=(tp||'0:0').split(':').map(Number);
+  const dateP=new Date(annee,moisP-1,jour);
+  const dowP=dateP.getDay();
+  const semPaire=getWeekNumber(dateP)%2===0;
+
+  // Bacs
+  let bTxt='',bUrg=false;
+  if(dowP===0){bTxt='🗑️ Sortir le bac noir ce soir !';bUrg=true;}
+  else if(dowP===1&&hP<8){bTxt='🗑️ Bac noir : collecte ce matin';bUrg=true;}
+  else if(dowP===1&&semPaire){bTxt='♻️ Sortir le bac jaune ce soir !';bUrg=true;}
+  else if(dowP===2&&semPaire&&hP<8){bTxt='♻️ Bac jaune : collecte ce matin';bUrg=true;}
+  else{const j2lun=dowP===1?7:(8-dowP)%7||7;if(j2lun===1){bTxt='🗑️ Bac noir demain — sortir ce soir';bUrg=true;}else{bTxt='🗑️ Lundi · ♻️ Jaune mardi sem. paire';}}
+  const omEl=document.getElementById('om-text');
+  if(omEl){omEl.textContent=bTxt;omEl.style.color=bUrg?'#fcd34d':'rgba(216,243,220,0.85)';}
+
+  // Déchetterie
+  const isH=moisP>=10||moisP<=3;
+  const matO=isH?10:9, apF=isH?17:18;
+  const isOuv=dowP>=1&&dowP<=6;
+  let dTxt='',dOuv=false;
+  if(!isOuv){dTxt='Fermée (ouvre lundi à '+matO+'h)';}
+  else if(hP<matO){dTxt='Fermée — ouvre à '+matO+'h';}
+  else if(hP<12){dOuv=true;dTxt='Ouverte — ferme à 12h';}
+  else if(hP<14){dTxt='Fermée — ouvre à 14h';}
+  else if(hP<apF){dOuv=true;dTxt='Ouverte — ferme à '+apF+'h';}
+  else{dTxt='Fermée — ouvre '+(dowP<6?'demain':'lundi')+' à '+matO+'h';}
+  const dEl=document.getElementById('dechetterie-text');
+  if(dEl){dEl.textContent=dTxt;dEl.style.color=dOuv?'#86efac':'rgba(216,243,220,0.75)';}
 }
 
-// ── Notifications Push ────────────────
-let pushRegistered = false;
-async function togglePush(){
-  const btn = document.getElementById('push-btn');
-  if(pushRegistered){ btn.textContent='Activer'; btn.classList.add('off'); pushRegistered=false; return; }
-  if(!('Notification' in window)){ alert('Notifications non supportées sur ce navigateur.'); return; }
-  const perm = await Notification.requestPermission();
-  if(perm !== 'granted'){ alert('Notifications refusées. Modifiez les paramètres de votre navigateur.'); return; }
-  if('serviceWorker' in navigator){
-    try{
-      const reg = await navigator.serviceWorker.ready;
-      const sub = await reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey:urlBase64ToUint8Array(VAPID_PUB) });
-      await fetch('https://chatbot-mairie-mezieres.onrender.com/push/subscribe', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(sub) });
-      btn.textContent='Désactiver'; btn.classList.remove('off'); pushRegistered=true;
-      alert('✅ Notifications activées\u00a0! Vous serez alerté des nouvelles publications Radio Mézières.');
-    }catch(e){ alert('Erreur lors de l\'activation des notifications.'); }
-  }
-}
-
-function urlBase64ToUint8Array(b64){
-  const pad = '='.repeat((4-b64.length%4)%4);
-  const raw = atob((b64+pad).replace(/-/g,'+').replace(/_/g,'/'));
-  return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)));
-}
-
-// ── Service Worker ────────────────────
-if('serviceWorker' in navigator){ navigator.serviceWorker.register('./service-worker.js').catch(()=>{}); }
-
-// ── Déchets ───────────────────────────────────────────────────
-// Bac noir : chaque lundi (sortir dimanche soir)
-// Bac jaune (recyclables) : mardi des semaines paires (sauf si férié → mercredi)
-
-const JOURS_FERIES_2025_2026 = [
-  '2025-11-01','2025-11-11','2025-12-25',
-  '2026-01-01','2026-04-06','2026-05-01','2026-05-08',
-  '2026-05-14','2026-05-25','2026-07-14','2026-08-15','2026-11-01','2026-11-11','2026-12-25'
-];
-
-function isJourFerie(date) {
-  return JOURS_FERIES_2025_2026.includes(date.toISOString().slice(0,10));
-}
-
-function getWeekNumber(d) {
-  const onejan = new Date(d.getFullYear(), 0, 1);
-  return Math.ceil((((d - onejan) / 86400000) + onejan.getDay() + 1) / 7);
-}
-
-function isSemainePaire(d) {
-  return getWeekNumber(d) % 2 === 0;
-}
-
-function getNextCollecteOM(from) {
-  // Prochain lundi
-  const d = new Date(from);
-  const day = d.getDay(); // 0=dim, 1=lun
-  const daysToMonday = day === 1 ? 0 : (8 - day) % 7 || 7;
-  d.setDate(d.getDate() + daysToMonday);
-  d.setHours(0,0,0,0);
-  return d;
-}
-
-function getNextCollecteTri(from) {
-  // Prochain mardi de semaine paire (décalé au mercredi si férié)
-  const d = new Date(from);
-  d.setHours(0,0,0,0);
-  for (let i = 0; i <= 14; i++) {
-    const test = new Date(d);
-    test.setDate(d.getDate() + i);
-    const dow = test.getDay(); // 2=mardi, 3=mercredi
-    if (dow === 2 && isSemainePaire(test)) {
-      if (isJourFerie(test)) {
-        // Décaler au mercredi
-        test.setDate(test.getDate() + 1);
-      }
-      return test;
-    }
-    // Cas du mercredi si mardi était férié la semaine paire
-    if (dow === 3 && isSemainePaire(new Date(test.getFullYear(), test.getMonth(), test.getDate()-1))) {
-      const mardi = new Date(test); mardi.setDate(test.getDate()-1);
-      if (isJourFerie(mardi)) return test;
-    }
-  }
-  return null;
-}
-
-function formatCollecteMsg(date, type) {
-  const now = new Date(); now.setHours(0,0,0,0);
-  const diff = Math.round((date - now) / 86400000);
-  const JOURS_NOM = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
-  const nom = JOURS_NOM[date.getDay()];
-  if (diff === 0) return { txt: type + ' aujourd’hui !', urgent: true };
-  if (diff === 1) return { txt: '⚠️ ' + type + ' demain — sortir ce soir !', urgent: true };
-  if (diff === 2) return { txt: type + ' ' + nom + ' (dans 2j)', urgent: false };
-  return { txt: type + ' ' + nom + ' ' + date.getDate() + '/' + (date.getMonth()+1), urgent: false };
-}
-
-function loadDechets() {
-  const now = new Date();
-
-  // OM
-  const nextOM = getNextCollecteOM(now);
-  const msgOM = formatCollecteMsg(nextOM, 'Bac noir');
-  const omEl = document.getElementById('om-text');
-  if (omEl) {
-    omEl.textContent = msgOM.txt;
-    if (msgOM.urgent) omEl.style.color = '#ffd580';
-  }
-
-  // Tri
-  const nextTri = getNextCollecteTri(now);
-  const triEl = document.getElementById('tri-text');
-  if (triEl && nextTri) {
-    const msgTri = formatCollecteMsg(nextTri, 'Bac jaune');
-    triEl.textContent = msgTri.txt;
-    if (msgTri.urgent) triEl.style.color = '#ffd580';
-  }
-}
-
-function openDechets() {
-  openOv('dechets');
-  // Horaires déchetterie Cléry-Saint-André
-  const el = document.getElementById('dechets-content');
-  const now = new Date();
-  const dow = now.getDay(); // 0=dim
-  const h = now.getHours();
-
-  // Horaires déchetterie Cléry-Saint-André
-  // Hiver (oct-mars) : lun-sam 10h-12h / 14h-17h
-  // Été  (avr-sep)  : lun-sam  9h-12h / 14h-18h
-  const mois = now.getMonth() + 1;
-  const isHiver = mois >= 10 || mois <= 3;
-  const matin = isHiver ? {o:10, f:12} : {o:9,  f:12};
-  const aprem = isHiver ? {o:14, f:17} : {o:14, f:18};
-  const isJourOuvre = dow >= 1 && dow <= 6;
-  const m = now.getMinutes();
-  let ouvert = false, prochaine = '';
-  if (!isJourOuvre) {
-    prochaine = 'Ouvre lundi à ' + matin.o + 'h';
-  } else if (h < matin.o) {
-    prochaine = 'Ouvre à ' + matin.o + 'h';
-  } else if (h < matin.f) {
-    ouvert = true; prochaine = 'Ferme à ' + matin.f + 'h';
-  } else if (h < aprem.o) {
-    prochaine = 'Ouvre à ' + aprem.o + 'h';
-  } else if (h < aprem.f) {
-    ouvert = true; prochaine = 'Ferme à ' + aprem.f + 'h';
-  } else {
-    prochaine = dow < 6 ? 'Ouvre demain à ' + matin.o + 'h' : 'Ouvre lundi à ' + matin.o + 'h';
-  }
-    
-  const nextOM2 = getNextCollecteOM(now);
-  const nextTri2 = getNextCollecteTri(now);
-  const JOURS_NOM = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
-
-  el.innerHTML = statusHTML +
-    `<div style="font-size:0.72rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Horaires déchetterie — Cléry-Saint-André</div>
-    <table style="width:100%;border-collapse:collapse;font-size:0.82rem;margin-bottom:16px;background:white;border-radius:12px;overflow:hidden">
-      <tr style="background:var(--mist)"><th style="padding:7px 10px;text-align:left;color:var(--leaf)">Période</th><th style="padding:7px 10px;text-align:left;color:var(--leaf)">Horaires (lun–sam)</th></tr>
-      <tr><td style="padding:7px 10px;color:var(--muted)">Hiver (oct → mars)</td><td style="padding:7px 10px">10h–12h / 14h–17h</td></tr>
-      <tr><td style="padding:7px 10px;color:var(--muted)">Été (avr → sep)</td><td style="padding:7px 10px">9h–12h / 14h–18h</td></tr>
-      <tr><td style="padding:7px 10px;color:#aaa">Dimanche</td><td style="padding:7px 10px;color:#aaa">Fermé</td></tr>
-    </table>
-    <div style="font-size:0.72rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Prochaines collectes</div>
-    <div style="background:white;border-radius:12px;padding:12px;font-size:0.84rem">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-        <span style="font-size:1.4rem">🗑️</span>
-        <div><div style="font-weight:700;color:var(--text)">Bac noir</div>
-        <div style="font-size:0.72rem;color:var(--muted)">${JOURS_NOM[nextOM2.getDay()]} ${nextOM2.getDate()}/${nextOM2.getMonth()+1} — Sortir le dimanche soir</div></div>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <span style="font-size:1.4rem">♻️</span>
-        <div><div style="font-weight:700;color:var(--text)">Bac jaune — Recyclables</div>
-        <div style="font-size:0.72rem;color:var(--muted)">${nextTri2 ? JOURS_NOM[nextTri2.getDay()]+' '+nextTri2.getDate()+'/'+( nextTri2.getMonth()+1)+' — Semaines paires' : 'À venir'}</div></div>
-      </div>
-    </div>
-    <div style="font-size:0.65rem;color:var(--muted);text-align:center;margin-top:10px">
-      ⚠️ Horaires déchetterie à vérifier sur <a href="https://www.ccterresduvaldeloire.fr/dechets/" target="_blank" style="color:var(--sage)">ccterresduvaldeloire.fr</a>
-    </div>`;
-}
-
-// ── Init ──────────────────────────────
+// ── Init ─────────────────────────────────────────────────────
 loadMeteo();
 loadEvents();
 loadDechets();
+// Rafraîchir les infos déchets toutes les minutes
+setInterval(loadDechets, 60000);
+
 </script>
 </body>
 </html>
