@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="MAT">
 <title>MAT — Mézières Avec Toi</title>
-<!-- VERSION 3.1 -->
+<!-- VERSION 3.2 -->
 <link rel="manifest" href="manifest.webmanifest">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fraunces:opsz,wght@9..144,300;9..144,600&display=swap" rel="stylesheet">
 <style>
@@ -45,7 +45,12 @@ html,body{min-height:100%;background:var(--warm);font-family:'Nunito',sans-serif
 .mat-version{font-size:0.5rem;color:rgba(255,255,255,0.2);font-family:monospace;margin-top:6px;}
 
 /* ── Météo strip ── */
-.meteo-strip{background:rgba(255,255,255,0.10);border-radius:12px;margin:0 0 0 0;padding:8px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;}
+.header-bottom-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:0;}
+.meteo-strip{background:rgba(255,255,255,0.10);border-radius:12px;padding:8px 10px;display:flex;align-items:center;gap:8px;cursor:pointer;}
+.dechets-strip{background:rgba(255,255,255,0.10);border-radius:12px;padding:8px 10px;display:flex;flex-direction:column;justify-content:space-around;gap:4px;}
+.dechet-row{display:flex;align-items:center;gap:6px;font-size:0.68rem;font-weight:700;color:var(--cream);line-height:1.3;}
+.dechet-ico{font-size:1rem;flex-shrink:0;}
+.dechet-ok{color:#86efac;}.dechet-warn{color:#fcd34d;}.dechet-info{color:var(--cream);}
 .meteo-ico{font-size:1.4rem;flex-shrink:0;}
 .meteo-temp{font-size:1.1rem;font-weight:900;color:var(--cream);}
 .meteo-desc{font-size:0.68rem;color:rgba(216,243,220,0.8);flex:1;}
@@ -215,19 +220,28 @@ html,body{min-height:100%;background:var(--warm);font-family:'Nunito',sans-serif
       <div class="mat-badge">Application officielle</div>
       <div class="mat-title">Mézières-lez-Cléry</div>
       <div class="mat-sub">Commune de Mézières-lez-Cléry</div>
-      <div class="mat-version">v3.1</div>
+      <div class="mat-version">v3.2</div>
     </div>
     <img src="mat-header.png" alt="MAT" class="mat-img" onerror="this.style.display='none'">
   </div>
 
-  <!-- Météo -->
-  <div class="meteo-strip" onclick="openMeteo()">
-    <div class="meteo-ico" id="meteo-ico">🌤️</div>
-    <div>
-      <div class="meteo-temp" id="meteo-temp"><span class="meteo-loading">Chargement météo…</span></div>
-      <div class="meteo-desc" id="meteo-desc"></div>
+  <!-- Météo + Déchets -->
+  <div class="header-bottom-grid">
+    <div class="meteo-strip" onclick="openMeteo()">
+      <div class="meteo-ico" id="meteo-ico">🌤️</div>
+      <div style="flex:1;min-width:0">
+        <div class="meteo-temp" id="meteo-temp"><span class="meteo-loading">Météo…</span></div>
+        <div class="meteo-desc" id="meteo-desc"></div>
+      </div>
+      <div class="meteo-alerte" id="meteo-alerte" style="display:none"></div>
     </div>
-    <div class="meteo-alerte" id="meteo-alerte" style="display:none"></div>
+    <div class="dechets-strip">
+      <div class="dechet-row" id="dechet-poubelle"></div>
+      <div class="dechet-row" id="dechet-dechetterie">
+        <span class="dechet-ico">♻️</span>
+        <a href="https://www.ccterresduvaldeloire.fr/dechets/dechetteries/" target="_blank" style="color:var(--cream);font-size:0.68rem;font-weight:700;text-decoration:underline;text-underline-offset:2px;">Réseau déchetteries →</a>
+      </div>
+    </div>
   </div>
 
   <!-- Prochains événements -->
@@ -301,15 +315,13 @@ html,body{min-height:100%;background:var(--warm);font-family:'Nunito',sans-serif
       <div class="ico ico-rgpd">🔒</div>
       <div class="ct"><div class="ct-label">Données perso</div><div class="ct-sub">RGPD &amp; vie privée</div></div>
     </button>
-
-  </div>
-
-  <div class="grid2" style="margin-top:9px">
     <button class="card" onclick="installApp()">
       <div class="ico" style="background:linear-gradient(135deg,#f0f8e8,#d4f0d4)">📲</div>
       <div class="ct"><div class="ct-label">Installer MAT</div><div class="ct-sub">Écran d'accueil</div></div>
     </button>
   </div>
+
+
 
 </div>
 
@@ -481,9 +493,23 @@ html,body{min-height:100%;background:var(--warm);font-family:'Nunito',sans-serif
           <strong>Mairie de Mézières-lez-Cléry</strong><br>
           36 rue du bourg — 45370<br>
           📞 02 38 45 61 76<br>
-          ✉️ mairie@mezieres-lez-clery.fr
+          ✉️ <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="513c3038233834113c342b38342334227c3d342b7c323d3423287f3723">[email&#160;protected]</a>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ OVERLAY DÉCHETS ═══ -->
+<div class="ov" id="ov-dechets" onclick="ovClick('dechets',event)">
+  <div class="panel">
+    <div class="panel-hdr">
+      <div class="panel-ico" style="background:#eaf8e8">🗑️</div>
+      <div class="panel-title">Déchets &amp; Déchetterie</div>
+      <button class="panel-close" onclick="closeOv('dechets')">✕</button>
+    </div>
+    <div class="panel-body" id="dechets-detail">
+      <div id="dechets-content"></div>
     </div>
   </div>
 </div>
@@ -502,7 +528,7 @@ html,body{min-height:100%;background:var(--warm);font-family:'Nunito',sans-serif
   </div>
 </div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ════════════════════════════════════════
 // MAT v3.0 — Mézières Avec Toi
 // ════════════════════════════════════════
@@ -829,9 +855,164 @@ function urlBase64ToUint8Array(b64){
 // ── Service Worker ────────────────────
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('./service-worker.js').catch(()=>{}); }
 
+// ── Déchets ───────────────────────────────────────────────────
+// Ordures ménagères : chaque lundi (sortir dimanche soir)
+// Bac jaune (recyclables) : mardi des semaines paires (sauf si férié → mercredi)
+
+const JOURS_FERIES_2025_2026 = [
+  '2025-11-01','2025-11-11','2025-12-25',
+  '2026-01-01','2026-04-06','2026-05-01','2026-05-08',
+  '2026-05-14','2026-05-25','2026-07-14','2026-08-15','2026-11-01','2026-11-11','2026-12-25'
+];
+
+function isJourFerie(date) {
+  return JOURS_FERIES_2025_2026.includes(date.toISOString().slice(0,10));
+}
+
+function getWeekNumber(d) {
+  const onejan = new Date(d.getFullYear(), 0, 1);
+  return Math.ceil((((d - onejan) / 86400000) + onejan.getDay() + 1) / 7);
+}
+
+function isSemainePaire(d) {
+  return getWeekNumber(d) % 2 === 0;
+}
+
+function getNextCollecteOM(from) {
+  // Prochain lundi
+  const d = new Date(from);
+  const day = d.getDay(); // 0=dim, 1=lun
+  const daysToMonday = day === 1 ? 0 : (8 - day) % 7 || 7;
+  d.setDate(d.getDate() + daysToMonday);
+  d.setHours(0,0,0,0);
+  return d;
+}
+
+function getNextCollecteTri(from) {
+  // Prochain mardi de semaine paire (décalé au mercredi si férié)
+  const d = new Date(from);
+  d.setHours(0,0,0,0);
+  for (let i = 0; i <= 14; i++) {
+    const test = new Date(d);
+    test.setDate(d.getDate() + i);
+    const dow = test.getDay(); // 2=mardi, 3=mercredi
+    if (dow === 2 && isSemainePaire(test)) {
+      if (isJourFerie(test)) {
+        // Décaler au mercredi
+        test.setDate(test.getDate() + 1);
+      }
+      return test;
+    }
+    // Cas du mercredi si mardi était férié la semaine paire
+    if (dow === 3 && isSemainePaire(new Date(test.getFullYear(), test.getMonth(), test.getDate()-1))) {
+      const mardi = new Date(test); mardi.setDate(test.getDate()-1);
+      if (isJourFerie(mardi)) return test;
+    }
+  }
+  return null;
+}
+
+function formatCollecteMsg(date, type) {
+  const now = new Date(); now.setHours(0,0,0,0);
+  const diff = Math.round((date - now) / 86400000);
+  const JOURS_NOM = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
+  const nom = JOURS_NOM[date.getDay()];
+  if (diff === 0) return { txt: type + ' aujourd’hui !', urgent: true };
+  if (diff === 1) return { txt: '⚠️ ' + type + ' demain — sortir ce soir !', urgent: true };
+  if (diff === 2) return { txt: type + ' ' + nom + ' (dans 2j)', urgent: false };
+  return { txt: type + ' ' + nom + ' ' + date.getDate() + '/' + (date.getMonth()+1), urgent: false };
+}
+
+function loadDechets() {
+  const now = new Date();
+
+  // OM
+  const nextOM = getNextCollecteOM(now);
+  const msgOM = formatCollecteMsg(nextOM, 'OM');
+  const omEl = document.getElementById('om-text');
+  if (omEl) {
+    omEl.textContent = msgOM.txt;
+    if (msgOM.urgent) omEl.style.color = '#ffd580';
+  }
+
+  // Tri
+  const nextTri = getNextCollecteTri(now);
+  const triEl = document.getElementById('tri-text');
+  if (triEl && nextTri) {
+    const msgTri = formatCollecteMsg(nextTri, '🟡 Bac jaune');
+    triEl.textContent = msgTri.txt;
+    if (msgTri.urgent) triEl.style.color = '#ffd580';
+  }
+}
+
+function openDechets() {
+  openOv('dechets');
+  // Horaires déchetterie Cléry-Saint-André
+  const el = document.getElementById('dechets-content');
+  const now = new Date();
+  const dow = now.getDay(); // 0=dim
+  const h = now.getHours();
+
+  // Horaires déchetterie du réseau CCTVL (Cléry-Saint-André)
+  const horaires = {
+    1: { label:'Lundi',    h:'9h–12h / 14h–17h30' },
+    2: { label:'Mardi',    h:'Fermé' },
+    3: { label:'Mercredi', h:'9h–12h / 14h–17h30' },
+    4: { label:'Jeudi',    h:'Fermé' },
+    5: { label:'Vendredi', h:'9h–12h / 14h–17h30' },
+    6: { label:'Samedi',   h:'9h–12h / 14h–17h30' },
+    0: { label:'Dimanche', h:'Fermé' },
+  };
+
+  let statusHTML = '';
+  const hAujourdhui = horaires[dow];
+  const isOuvert = hAujourdhui.h !== 'Fermé' && (
+    (h >= 9 && h < 12) || (h >= 14 && h < 17) || (h === 17 && now.getMinutes() < 30)
+  );
+  if (hAujourdhui.h === 'Fermé') {
+    statusHTML = '<div style="background:#fde8e8;border-radius:10px;padding:10px 13px;margin-bottom:12px;font-weight:800;color:#c00">🔴 Fermé aujourd’hui</div>';
+  } else if (isOuvert) {
+    statusHTML = '<div style="background:#eefaf4;border-radius:10px;padding:10px 13px;margin-bottom:12px;font-weight:800;color:#2d6a4f">🟢 Ouverte maintenant · ' + hAujourdhui.h + '</div>';
+  } else {
+    statusHTML = '<div style="background:#fff7ed;border-radius:10px;padding:10px 13px;margin-bottom:12px;font-weight:800;color:#9a3412">🟡 Fermée · Horaires aujourd’hui : ' + hAujourdhui.h + '</div>';
+  }
+
+  const tableRows = Object.values(horaires).map(j =>
+    `<tr><td style="padding:6px 10px;font-weight:${horaires[dow].label===j.label?'800':'400'};color:${horaires[dow].label===j.label?'var(--forest)':'var(--muted)'}">${j.label}</td><td style="padding:6px 10px;color:${j.h==='Fermé'?'#aaa':'var(--text)'}">${j.h}</td></tr>`
+  ).join('');
+
+  const nextOM2 = getNextCollecteOM(now);
+  const nextTri2 = getNextCollecteTri(now);
+  const JOURS_NOM = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+
+  el.innerHTML = statusHTML +
+    `<div style="font-size:0.72rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Horaires déchetterie — Cléry-Saint-André</div>
+    <table style="width:100%;border-collapse:collapse;font-size:0.82rem;margin-bottom:16px;background:white;border-radius:12px;overflow:hidden">
+      <tr style="background:var(--mist)"><th style="padding:7px 10px;text-align:left;color:var(--leaf)">Jour</th><th style="padding:7px 10px;text-align:left;color:var(--leaf)">Horaires</th></tr>
+      ${tableRows}
+    </table>
+    <div style="font-size:0.72rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Prochaines collectes</div>
+    <div style="background:white;border-radius:12px;padding:12px;font-size:0.84rem">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <span style="font-size:1.4rem">🗑️</span>
+        <div><div style="font-weight:700;color:var(--text)">Ordures ménagères</div>
+        <div style="font-size:0.72rem;color:var(--muted)">${JOURS_NOM[nextOM2.getDay()]} ${nextOM2.getDate()}/${nextOM2.getMonth()+1} — Sortir le dimanche soir</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:1.4rem">♻️</span>
+        <div><div style="font-weight:700;color:var(--text)">Bac jaune — Recyclables</div>
+        <div style="font-size:0.72rem;color:var(--muted)">${nextTri2 ? JOURS_NOM[nextTri2.getDay()]+' '+nextTri2.getDate()+'/'+( nextTri2.getMonth()+1)+' — Semaines paires' : 'À venir'}</div></div>
+      </div>
+    </div>
+    <div style="font-size:0.65rem;color:var(--muted);text-align:center;margin-top:10px">
+      ⚠️ Horaires déchetterie à vérifier sur <a href="https://www.ccterresduvaldeloire.fr/dechets/" target="_blank" style="color:var(--sage)">ccterresduvaldeloire.fr</a>
+    </div>`;
+}
+
 // ── Init ──────────────────────────────
 loadMeteo();
 loadEvents();
+loadDechets();
 </script>
 </body>
 </html>
