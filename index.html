@@ -661,78 +661,108 @@ function fmtMm(v){ return (v===null||v===undefined||Number.isNaN(Number(v))) ? '
 function fmtNum(v,u=''){ return (v===null||v===undefined||Number.isNaN(Number(v))) ? '—' : Math.round(Number(v)) + u; }
 function fmtDateTime(value){ if(!value) return ''; const d=new Date(value); if(Number.isNaN(d.getTime())) return value; return d.toLocaleString('fr-FR',{weekday:'long',day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'}); }
 
-async function loadMeteo(){
+aasync function loadMeteo(){
   try{
-    const r = await fetch(API_BASE + '/meteo/commune');
-    const payload = await r.json();
-    const d = payload.forecast;
-    const vig = payload.vigilance || null;
-    const cur = d.current;
-    const code = cur.weathercode;
-    const temp = Math.round(cur.temperature_2m);
+    const API_BASE = 'https://chatbot-mairie-mezieres.onrender.com';
+    const r = await fetch(`${API_BASE}/meteo/commune`);
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+
+    const d = await r.json();
+    const forecast = d.forecast || {};
+    const cur = forecast.current || {};
+    const vigilance = d.vigilance || null;
+
+    const code = cur.weather_code;
+    const temp = Math.round(cur.temperature_2m ?? 0);
+    const vent = Math.round(cur.wind_speed_10m ?? 0);
+
     const ico = METEO_ICONS[code] || '🌡️';
-    const desc = METEO_DESC[code] || '';
+    const desc = METEO_DESC[code] || 'Météo';
+
     document.getElementById('meteo-ico').textContent = ico;
-    document.getElementById('meteo-temp').innerHTML = '<strong style="font-size:1.2rem;color:var(--cream)">'+ temp +'°C</strong>';
-    document.getElementById('meteo-desc').textContent = desc + ' · Vent ' + Math.round(cur.windspeed_10m || 0) + ' km/h';
+    document.getElementById('meteo-temp').innerHTML =
+      '<strong style="font-size:1.2rem;color:var(--cream)">' + temp + '°C</strong>';
+    document.getElementById('meteo-desc').textContent =
+      desc + ' · Vent ' + vent + ' km/h';
+
     const badge = document.getElementById('meteo-alerte');
-    if(vig && vig.color >= 2){
-      badge.textContent = (VIGI_BADGES[vig.color] || '⚠️') + ' Vigilance ' + (VIGI_COLORS[vig.color] || '');
-      badge.style.display='block';
+    if (vigilance && vigilance.level >= 3) {
+      badge.textContent = '⚠️ Vigilance ' + (vigilance.color_label || 'orange');
+      badge.style.display = 'block';
     } else {
-      badge.style.display='none';
+      badge.style.display = 'none';
     }
-    window._meteoData = payload;
+
+    window._meteoData = d;
   }catch(e){
-    document.getElementById('meteo-temp').innerHTML = '<span style="font-size:0.72rem;color:rgba(255,255,255,0.5)">Météo indisponible</span>';
+    console.error('Erreur météo:', e);
+    document.getElementById('meteo-temp').innerHTML =
+      '<span style="font-size:0.72rem;color:rgba(255,255,255,0.5)">Météo indisponible</span>';
   }
 }
 
 function loadMeteoDetail(){
-  const payload = window._meteoData;
+  const d = window._meteoData;
   const el = document.getElementById('meteo-detail');
-  if(!payload || !payload.forecast){ el.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted)">Données non disponibles.</div>'; return; }
-  const d = payload.forecast;
-  const vig = payload.vigilance || null;
-  const cur = d.current || {};
-  const days = d.daily || {};
+
+  if(!d){
+    el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted)">Données non disponibles.</div>';
+    return;
+  }
+
+  const forecast = d.forecast || {};
+  const cur = forecast.current || {};
+  const days = forecast.daily || {};
+  const vigilance = d.vigilance || null;
+
   const JOURS = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+
   let html = '';
 
-  if(vig && vig.color >= 2){
-    html += '<div style="background:white;border:1px solid var(--border);border-left:5px solid '+(vig.color===4?'#dc2626':vig.color===3?'#f97316':'#eab308')+';border-radius:14px;padding:14px;margin-bottom:14px">'
-      +'<div style="font-size:0.8rem;font-weight:900;color:var(--text)">'+(VIGI_BADGES[vig.color] || '⚠️')+' Vigilance '+(VIGI_COLORS[vig.color] || '')+' — '+escapeHtml(vig.risk || 'Phénomène météo')+'</div>'
-      +(vig.start ? '<div style="font-size:0.72rem;color:var(--muted);margin-top:6px">Début estimé : '+escapeHtml(fmtDateTime(vig.start))+'</div>' : '')
-      +(vig.end ? '<div style="font-size:0.72rem;color:var(--muted);margin-top:2px">Fin estimée : '+escapeHtml(fmtDateTime(vig.end))+'</div>' : '')
-      +'<div style="font-size:0.68rem;color:var(--muted);margin-top:8px">Source : Météo-France</div>'
-      +'</div>';
+  if (vigilance && vigilance.level >= 2) {
+    html += '<div style="background:#fff7ed;border:1px solid #fdba74;border-radius:14px;padding:12px;margin-bottom:14px">'
+      + '<div style="font-size:0.85rem;font-weight:900;color:#9a3412">⚠️ Vigilance '
+      + (vigilance.color_label || '')
+      + '</div>'
+      + '<div style="font-size:0.72rem;color:#7c2d12;margin-top:4px">'
+      + (vigilance.main_text || vigilance.title || 'Alerte météo en cours')
+      + '</div>'
+      + '</div>';
   }
 
-  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">'
-    +'<div style="background:white;border-radius:14px;padding:12px;border:1px solid var(--border)"><div style="font-size:0.68rem;font-weight:800;color:var(--muted)">Pluie actuelle</div><div style="font-size:1rem;font-weight:900;color:var(--text);margin-top:4px">'+fmtMm(cur.precipitation)+'</div></div>'
-    +'<div style="background:white;border-radius:14px;padding:12px;border:1px solid var(--border)"><div style="font-size:0.68rem;font-weight:800;color:var(--muted)">Humidité</div><div style="font-size:1rem;font-weight:900;color:var(--text);margin-top:4px">'+fmtNum(cur.relative_humidity_2m,'%')+'</div></div>'
-    +'<div style="background:white;border-radius:14px;padding:12px;border:1px solid var(--border)"><div style="font-size:0.68rem;font-weight:800;color:var(--muted)">Pression</div><div style="font-size:1rem;font-weight:900;color:var(--text);margin-top:4px">'+fmtNum(cur.pressure_msl,' hPa')+'</div></div>'
-    +'<div style="background:white;border-radius:14px;padding:12px;border:1px solid var(--border)"><div style="font-size:0.68rem;font-weight:800;color:var(--muted)">Rafales</div><div style="font-size:1rem;font-weight:900;color:var(--text);margin-top:4px">'+fmtNum(cur.windgusts_10m,' km/h')+'</div></div>'
-    +'</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">'
+    + '<div style="background:white;border-radius:14px;padding:12px;border:1px solid var(--border)"><div style="font-size:0.65rem;color:var(--muted)">🌧️ Pluie actuelle</div><div style="font-size:1rem;font-weight:800;color:var(--text)">' + (cur.precipitation ?? 0) + ' mm</div></div>'
+    + '<div style="background:white;border-radius:14px;padding:12px;border:1px solid var(--border)"><div style="font-size:0.65rem;color:var(--muted)">💧 Humidité</div><div style="font-size:1rem;font-weight:800;color:var(--text)">' + (cur.relative_humidity_2m ?? 0) + '%</div></div>'
+    + '<div style="background:white;border-radius:14px;padding:12px;border:1px solid var(--border)"><div style="font-size:0.65rem;color:var(--muted)">📊 Pression</div><div style="font-size:1rem;font-weight:800;color:var(--text)">' + Math.round(cur.pressure_msl ?? 0) + ' hPa</div></div>'
+    + '<div style="background:white;border-radius:14px;padding:12px;border:1px solid var(--border)"><div style="font-size:0.65rem;color:var(--muted)">🌬️ Rafales</div><div style="font-size:1rem;font-weight:800;color:var(--text)">' + Math.round(cur.wind_gusts_10m ?? 0) + ' km/h</div></div>'
+    + '</div>';
 
   html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">';
+
   for(let i=0;i<3;i++){
-    const dt = new Date(days.time[i]);
-    const jour = i===0?'Aujourd\'hui':i===1?'Demain':JOURS[dt.getDay()];
-    const ico = METEO_ICONS[days.weathercode[i]]||'🌡️';
-    const desc = METEO_DESC[days.weathercode[i]]||'';
+    const dt = new Date(days.time?.[i]);
+    const jour = i===0 ? 'Aujourd\'hui' : i===1 ? 'Demain' : JOURS[dt.getDay()];
+    const code = days.weather_code?.[i];
+    const ico = METEO_ICONS[code] || '🌡️';
+    const desc = METEO_DESC[code] || '';
+    const tmax = Math.round(days.temperature_2m_max?.[i] ?? 0);
+    const tmin = Math.round(days.temperature_2m_min?.[i] ?? 0);
+    const pluie = days.precipitation_sum?.[i] ?? 0;
+    const uv = days.uv_index_max?.[i] ?? '-';
+
     html += '<div style="background:white;border-radius:14px;padding:12px;text-align:center;border:1px solid var(--border)">'
-      +'<div style="font-size:0.68rem;font-weight:800;color:var(--muted);margin-bottom:4px">'+jour+'</div>'
-      +'<div style="font-size:1.8rem">'+ico+'</div>'
-      +'<div style="font-size:0.8rem;font-weight:800;color:var(--text);margin-top:4px">'+Math.round(days.temperature_2m_max[i])+'° / '+Math.round(days.temperature_2m_min[i])+'°</div>'
-      +'<div style="font-size:0.62rem;color:var(--muted);margin-top:2px">'+desc+'</div>'
-      +'<div style="font-size:0.62rem;color:#3b82f6;margin-top:2px">💧 '+fmtMm(days.precipitation_sum[i])+'</div>'
-      +'<div style="font-size:0.62rem;color:var(--muted);margin-top:2px">Risque pluie '+fmtNum(days.precipitation_probability_max[i],'%')+'</div>'
-      +'<div style="font-size:0.62rem;color:var(--muted);margin-top:2px">Rafales '+fmtNum(days.windgusts_10m_max[i],' km/h')+'</div>'
-      +'</div>';
+      + '<div style="font-size:0.68rem;font-weight:800;color:var(--muted);margin-bottom:4px">' + jour + '</div>'
+      + '<div style="font-size:1.8rem">' + ico + '</div>'
+      + '<div style="font-size:0.8rem;font-weight:800;color:var(--text);margin-top:4px">' + tmax + '° / ' + tmin + '°</div>'
+      + '<div style="font-size:0.62rem;color:var(--muted);margin-top:2px">' + desc + '</div>'
+      + '<div style="font-size:0.62rem;color:#2563eb;margin-top:2px">🌧️ ' + pluie + ' mm</div>'
+      + '<div style="font-size:0.62rem;color:#ca8a04;margin-top:2px">🌞 UV ' + uv + '</div>'
+      + '</div>';
   }
+
   html += '</div>';
-  html += '<div style="font-size:0.65rem;color:var(--muted);text-align:center">Source prévisions : Open-Meteo · Vigilance : Météo-France</div>';
+  html += '<div style="font-size:0.65rem;color:var(--muted);text-align:center">Source prévisions : Open-Meteo · Vigilance : Météo-France via votre serveur</div>';
+
   el.innerHTML = html;
 }
 
